@@ -19,15 +19,15 @@ library(tidymodels)
 
 ## Introduction
 
--   an introduction to the subject matter you\'re investigating (citing any relevant literature)
+-   an introduction to the subject matter you're investigating (citing any relevant literature)
 
 -   the motivation for your research question (citing any relevant literature)
 
 -   the primary research question you are interested in exploring
 
-    In the school year 2019 - 2020, which gender of students had a higher participation rate?
+    In the school year 2019 - 2020, how can we predict the revenue in USD of collegiate sports using participation rate, sport type, expenditure, gender, total count of students, and
 
--   your team\'s hypotheses regarding the research question
+-   your team's hypotheses regarding the research question
 
     -   This is a narrative about what you think regarding the research question, not formal statistical hypotheses.
 
@@ -51,7 +51,7 @@ library(tidymodels)
 
 -   the relationships between the response variable and each of the predictors from the previous step
 
--   a potential interaction effect you\'re interested in exploring (it doesn\'t have to be an interaction with the two predictors from above)
+-   a potential interaction effect you're interested in exploring (it doesn't have to be an interaction with the two predictors from above)
 
 ...
 
