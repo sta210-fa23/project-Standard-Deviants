@@ -19,20 +19,54 @@ library(tidymodels)
 
 ## Introduction
 
+-   an introduction to the subject matter you\'re investigating (citing any relevant literature)
+
+-   the motivation for your research question (citing any relevant literature)
+
+-   the primary research question you are interested in exploring
+
+-   your team\'s hypotheses regarding the research question
+
+    -   This is a narrative about what you think regarding the research question, not formal statistical hypotheses.
+
 ...
 
 ## Data description
+
+-   the source of the data set
+
+-   a description of when and how the data were originally collected (by the original data curator, not necessarily how you found the data)
+
+-   a description of the observations and general characteristics being measured
 
 ...
 
 ## Initial exploratory data analysis
 
+-   distribution of the response variable
+
+-   distributions of one potential quantitative predictor variable and one potential categorical predictor variable
+
+-   the relationships between the response variable and each of the predictors from the previous step
+
+-   a potential interaction effect you\'re interested in exploring (it doesn\'t have to be an interaction with the two predictors from above)
+
+These steps are to help get you started on exploratory data analysis and will not be the complete EDA for the final report. The requirements above are minimum requirements, but your group is welcome to include more at this stage.
+
+In this section, you will also describe any data cleaning you need to do to prepare for modeling, such as imputing missing values, collapsing levels for categorical predictors, creating new variables, summarizing data, etc.
+
 ...
 
 ## Analysis approach
+
+-   a description of the response variable and list of all potential predictors
+
+-   regression model technique (multiple linear regression or logistic regression)
 
 ...
 
 ## Data dictionary
 
 The data dictionary can be found [here](ADD%20LINK!!!) \[Update the link and remove this note!\]
+
+Submit a data dictionary for all the variables in your data set in the `README` of the `data` folder. You do [not]{.underline} need to include the data dictionary in the PDF document.
