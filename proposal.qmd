@@ -35,13 +35,15 @@ library(tidymodels)
 
 ## Data description
 
--   the source of the data set
+The data set was taken from TidyTuesday and was originally scraped from Equity in Athletics Data Analysis (EADA), a sector of the US Department of Education. The data is available on an online database found on the (EADA) website[^1].
 
--   a description of when and how the data were originally collected (by the original data curator, not necessarily how you found the data)
+[^1]: <https://ope.ed.gov/athletics/#/datafile/list>
 
--   a description of the observations and general characteristics being measured
+This data is submitted annually from colleges to the EADA. All co-educational postsecondary institutions that receive Title IV funding that have intercollegiate athletics programs are required by the Equity in Athletics Disclosure Act to submit this data[^2]. The original data files are also created immediately after the data collection for each school. These data are collected annually starting from 2003 to 2022, but for our specific data analysis we will only look at data taken from the school year of 2019 to 2020.
 
-...
+[^2]: <https://knightnewhousedata.org/about-the-data#:~:text=The%20data%20is%20available%20via,student%20aid%20programs>)
+
+The dataset we will use from the data scraped on Tidy Tuesday include many observations regarding collegiate sports. These observations include variables such as the name of the city which a school is in, the state, the school name, the classification code of the school (like 4 year accredited university), sport, and many quantitative variables regarding characteristics about the specific school and their collegiate spending. Most of the quantitative variables are split between men and women, having two different observations for the same variable. For example, there is total male population, total female population, participation rate of women, participation rate of men, participation rate for coed sports for men, participation rate for coed sports for women, revenue for men, revenue for women, expenditures for men, and expenditures for women. There are also observations for the total amount for each of these above variables which includes both men and women; for example, total expenditures for both men and women together. The observations are therefore both quantitative and categorical and measure characteristics of different school\'s spending, revenue, populations, locations, and sports. 
 
 ## Initial exploratory data analysis
 
