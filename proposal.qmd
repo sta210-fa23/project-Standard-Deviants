@@ -25,6 +25,8 @@ library(tidymodels)
 
 -   the primary research question you are interested in exploring
 
+    In the school year 2019 - 2020, which gender of students had a higher participation rate?
+
 -   your team\'s hypotheses regarding the research question
 
     -   This is a narrative about what you think regarding the research question, not formal statistical hypotheses.
