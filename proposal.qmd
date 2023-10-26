@@ -49,8 +49,38 @@ The dataset we will use from the data scraped on Tidy Tuesday include many obser
 ## Initial exploratory data analysis
 
 -   distribution of the response variable
+```{r}
+sports <- sports |>
+  filter(!is.na(total_rev_menwomen)) |>
+  mutate(total_rev_mill = total_rev_menwomen / 1000000)
+
+sports |>
+  ggplot(aes(x = total_rev_mill)) +
+  geom_histogram(binwidth = 10) +
+  labs(title = "Distribution of Total Revenue (in millions)",
+       x = "Total revenue (in millions)", y = "Count")
+```
 
 -   distributions of one potential quantitative predictor variable and one potential categorical predictor variable
+```{r}
+sports <- sports |>
+  filter(!is.na(total_exp_menwomen)) |>
+  mutate(total_exp_mill = total_exp_menwomen / 1000000)
+
+sports |>
+  ggplot(aes(x = total_exp_mill)) +
+  geom_histogram(binwidth = 5) +
+  labs(title = "Distribution of Total Expenditure (in millions)",
+       x = "Total expenditure (in millions)", y = "Count")
+```
+```{r}
+sports |>
+  ggplot(aes(x = sector_name)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(title = "Distribution of Types of School")
+```
+
 
 -   the relationships between the response variable and each of the predictors from the previous step
 
