@@ -75,7 +75,9 @@ sports |>
 ```
 ```{r}
 sports |>
-  ggplot(aes(x = sector_name)) +
+  group_by(sector_name) |>
+  count() |>
+  ggplot(aes(x = sector_name, y = n)) +
   geom_boxplot() +
   coord_flip() +
   labs(title = "Distribution of Types of School")
@@ -92,7 +94,24 @@ sports |>
        x = "Total expenditure (in millions)", y = "Total revenue (in millions)")
 ```
 
+```{r}
+
+```
+
 -   a potential interaction effect you're interested in exploring (it doesn't have to be an interaction with the two predictors from above)
+
+I'm interested in exploring the potential interaction effect between expenditure and type of school.
+
+```{r}
+sports |>
+  ggplot(aes(x = total_exp_mill,
+             y = total_rev_mill,
+             color = sector_name)) +
+  geom_point() +
+  labs(title = "Total Revenue vs. Total Expenditure",
+       x = "Total expenditure (in millions)", y = "Total revenue (in millions)")
+```
+
 
 ...
 
