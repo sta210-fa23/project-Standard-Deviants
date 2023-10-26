@@ -83,6 +83,14 @@ sports |>
 
 
 -   the relationships between the response variable and each of the predictors from the previous step
+```{r}
+sports |>
+  ggplot(aes(x = total_exp_mill,
+             y = total_rev_mill)) +
+  geom_point() +
+  labs(title = "Total Revenue vs. Total Expenditure",
+       x = "Total expenditure (in millions)", y = "Total revenue (in millions)")
+```
 
 -   a potential interaction effect you're interested in exploring (it doesn't have to be an interaction with the two predictors from above)
 
