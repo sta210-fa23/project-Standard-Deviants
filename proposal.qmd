@@ -111,7 +111,7 @@ Since the distribution is skewed, the IQR is used as a more reliable measure of 
 
 There are 57 missing values of total revenue.
 
--   One potential categorical predictor is the type of school.
+-   One potential categorical predictor is the type of school, known as the variable sector_name.
 
 ```{r}
 cat_statistics <- function(x) {
