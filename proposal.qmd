@@ -87,7 +87,7 @@ There are 57 missing values of total revenue.
 
 **Distributions of one potential quantitative predictor variable and one potential categorical predictor variable**
 
-One potential quantitative predictor variable is the total expenditure on college sports.
+-   One potential quantitative predictor variable is the total expenditure on college sports.
 
 ```{r}
 basketball |>
@@ -111,12 +111,19 @@ Since the distribution is skewed, the IQR is used as a more reliable measure of 
 
 There are 57 missing values of total revenue.
 
-One potential categorical predictor is the type of school.
+-   One potential categorical predictor is the type of school.
 
 ```{r}
-basketball |>
-  select(sector_name, total_exp_mill) |>
-  group_by(sector_name)
+cat_statistics <- function(x) {
+  nmiss <- sum(is.na(x))
+  n     <- table(x)
+  p     <- prop.table(n)
+  OUT   <- cbind(n, p)
+  nmiss <- c(nmiss, rep(NA, nrow(OUT)-1))
+  OUT   <- cbind(OUT, nmiss)
+  return(OUT)
+}
+cat_statistics(basketball$sector_name)
 
 basketball |>
   group_by(sector_name) |>
@@ -128,11 +135,13 @@ basketball |>
        x = "Types of school", y = "Count")
 ```
 
-The distribution of types of school is uneven among the 6 types. The three types of private nonprofit, 2-year, private nonprofit, 2-year, and private for-profit, 2-year have the lowest number of observations. Private nonprofit, 4-year or above has the highest number of observations.
+There are 5 types of school. Private for-profit, 2-year and private nonprofit, 2-year have low numbers of observations. Private nonprofit, 4-year or above, public, 2 year, and public, 4-year or above have comparably higher number of observations than the other two, with private nonprofit, 2-year having the highest number of observations.
+
+There is 1 missing value of type of school.
 
 **The relationships between the response variable and each of the predictors from the previous step**
 
-For the relationship between total revenue and total expenditure
+-   For the relationship between total revenue and total expenditure
 
 ```{r}
 basketball_f <- basketball |>
@@ -154,7 +163,7 @@ There is a positive, linear relationship between total expenditure and total rev
 
 There are more observations with total expenditure in the lower range, mostly concentrating between 0 and 20 million dollars. There are potential outliers where total expenditure is above 20 million dollars.
 
-For relationship between total revenue and type of school
+-   For relationship between total revenue and type of school
 
 ```{r}
 basketball_f |>
