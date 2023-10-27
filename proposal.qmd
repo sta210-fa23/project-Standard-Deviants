@@ -48,12 +48,17 @@ The dataset we will use from the data scraped on Tidy Tuesday include many obser
 
 ## Initial exploratory data analysis
 
--   distribution of the response variable
 ```{r}
 sports <- sports |>
-  filter(!is.na(total_rev_menwomen)) |>
-  mutate(total_rev_mill = total_rev_menwomen / 1000000)
+  filter(!is.na(total_exp_menwomen), 
+         !is.na(total_rev_menwomen),
+         !is.na(sector_name)) |>
+  mutate(total_rev_mill = total_rev_menwomen / 1000000,
+         total_exp_mill = total_exp_menwomen / 1000000)
+```
 
+-   distribution of the response variable
+```{r}
 sports |>
   ggplot(aes(x = total_rev_mill)) +
   geom_histogram(binwidth = 10) +
@@ -63,10 +68,6 @@ sports |>
 
 -   distributions of one potential quantitative predictor variable and one potential categorical predictor variable
 ```{r}
-sports <- sports |>
-  filter(!is.na(total_exp_menwomen)) |>
-  mutate(total_exp_mill = total_exp_menwomen / 1000000)
-
 sports |>
   ggplot(aes(x = total_exp_mill)) +
   geom_histogram(binwidth = 5) +
@@ -74,6 +75,10 @@ sports |>
        x = "Total expenditure (in millions)", y = "Count")
 ```
 ```{r}
+sports |>
+  select(sector_name, total_exp_mill) |>
+  group_by(sector_name)
+
 sports |>
   group_by(sector_name) |>
   count() |>
@@ -95,7 +100,13 @@ sports |>
 ```
 
 ```{r}
-
+sports |>
+  ggplot(aes(x = sector_name,
+             y = total_rev_mill)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(title = "Total Revenue vs. Type of School",
+       x = "Type of school", y = "Total revenue (in millions)")
 ```
 
 -   a potential interaction effect you're interested in exploring (it doesn't have to be an interaction with the two predictors from above)
