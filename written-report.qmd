@@ -9,14 +9,25 @@ execute:
   echo: false
 editor: visual
 ---
+```{r}
+#| label: model-stats-function
+calc_model_stats <- function(x) {
+  glance(extract_fit_parsnip(x)) |>
+    select(adj.r.squared, AIC, BIC)
+}
+```
 
 ```{r}
 #| label: load packages and data
+install.packages("reshape2")
+
 library(tidyverse)
 library(tidymodels)
 library(skimr)
+library(knitr)
 library(patchwork)
 library(kableExtra)
+library(reshape2)
 
 sports <- read.csv("data/sports.csv")
 ```
@@ -86,7 +97,7 @@ basketball |>
 
 The distribution of profit is approximately normally distributed with a slight right skew. However, many observations centered around 0\$ in profit. The median of the data is at 0\$, and the mean is about 0.027 million USD. Since the response is approximately normal, we can use the mean as the center of the data. The range is from -9.6738 million USD to 16.8938 million USD. We also split up the distribution into positive and negative profits and took the log of the x axis so better see a more detailed distribution. It seems that positive profits is normally distributed while negative profits are left skewed. There are 57 missing values of profit.
 
-**Distributions of total expenditure (potential quantitative predictor variable) and type of school (potential categorical predictor variable)**
+**Distributions of total amount of students (potential quantitative predictor variable) and type of school (potential categorical predictor variable)**
 
 ```{r pred-dist, echo = FALSE, fig.width = 7, fig.height = 3}
 p_exp <- basketball |>
@@ -154,14 +165,14 @@ basketball |>
   ggplot(aes(x = sum_partic_men, y = profit, color = classification_name)) +
   geom_point() +
   labs(title = "Profit vs. Men's Participation \n Rate and Classification Name",
-  x = "Total Men Participation Rate (%)", y = "Profit (in million $)") +
+  x = "Men's Participation Rate (%)", y = "Profit (in million $)") +
    theme(plot.title = element_text(size = 10))
 
 basketball |>
   ggplot(aes(x = sum_partic_women, y = profit, color = classification_name)) +
   geom_point() +
   labs(title = "Profit vs. Women's Participation \n Rate and Classification Name",
-  x = "Total Women Participation Rate (%)", y = "Profit (in million $)") +
+  x = "Women's Participation Rate (%)", y = "Profit (in million $)") +
    theme(plot.title = element_text(size = 10))
 
 ```
@@ -209,6 +220,266 @@ In this section, you will output the final model and include a brief discussion 
 
 This section also includes initial interpretations and conclusions drawn from the model.
 
-::: callout-important
-Before you submit, make sure your code chunks are turned off with `echo: false` and there are no warnings or messages with `warning: false` and `message: false` in the YAML.
-:::
+```{r}
+basketball_m <- basketball |>
+  mutate(rev_men_mill = rev_men / 1000000, rev_women_mill = rev_women / 1000000,
+         exp_men_mill = exp_men / 1000000, exp_women_mill = exp_women / 1000000) |>
+  mutate(men = rev_men_mill - exp_women_mill,
+         women = rev_women_mill - exp_women_mill) |>
+  melt(id = c("year", "unitid", "institution_name", "city_txt",
+              "state_cd", "zip_text", "classification_code", "classification_name",
+              "classification_other", "ef_male_count", "ef_female_count", "ef_total_count",
+              "sector_cd", "sector_name", "sportscode", "partic_men", "partic_women",
+              "partic_coed_men", "partic_coed_women", "sum_partic_men", "sum_partic_women",
+              "rev_men", "rev_women", "total_rev_menwomen",
+              "exp_men", "exp_women", "total_exp_menwomen",
+              "sports", "total_rev_mill", "total_exp_mill", "profit",
+              "rev_men_mill", "rev_women_mill", "exp_men_mill", "exp_women_mill"))
+
+names(basketball_m)[names(basketball_m) == "variable"] <- "gender"
+names(basketball_m)[names(basketball_m) == "value"] <- "profit_gender"
+
+```
+
+**model1**
+Response variable: Profit by gender
+
+`gender`: men or women
+```{r}
+split <- initial_split(basketball_m, prop = 0.75)
+train <- training(split)
+test <- testing(split)
+
+folds <- vfold_cv(train, v = 12)
+
+spec <- linear_reg() |>
+  set_engine("lm")
+
+```
+
+profit_gender ~ sum_partic_men + sum_partic_women + sector_name + gender
+                + ef_total_count + classification_name
+```{r}
+rec1 <-  recipe(profit_gender ~ sum_partic_men + sum_partic_women + sector_name + gender
+                + ef_total_count + classification_name, 
+                    data = train) |>
+  step_naomit() |>
+  step_center(sum_partic_men, sum_partic_women, ef_total_count) |>
+  step_dummy(all_nominal_predictors()) |>
+  step_zv(all_predictors())
+
+wflow1 <- workflow() |>
+  add_model(spec) |> 
+  add_recipe(rec1) 
+
+fit_rs1 <- wflow1 |>
+  fit_resamples(resamples = folds,
+                control = control_resamples(extract = calc_model_stats))
+
+```
+
+```{r}
+collect_metrics(fit_rs1, summarize = TRUE)
+
+map_df(fit_rs1$.extracts, ~ .x[[1]][[1]]) |> 
+  summarise(mean_adj_rsq = mean(adj.r.squared), 
+            mean_aic = mean(AIC), 
+            mean_bic = mean(BIC))
+
+```
+
+profit_gender ~ sum_partic_men + sum_partic_women + gender
+                + ef_total_count + classification_name
+```{r}
+rec2 <-  recipe(profit_gender ~ sum_partic_men + sum_partic_women + gender
+                + ef_total_count + classification_name, 
+                    data = train) |>
+  step_naomit() |>
+  step_center(sum_partic_men, sum_partic_women, ef_total_count) |>
+  step_dummy(all_nominal_predictors()) |>
+  step_zv(all_predictors())
+
+wflow2 <- workflow() |>
+  add_model(spec) |> 
+  add_recipe(rec2) 
+
+fit_rs2 <- wflow2 |>
+  fit_resamples(resamples = folds,
+                control = control_resamples(extract = calc_model_stats))
+
+```
+
+```{r}
+collect_metrics(fit_rs2, summarize = TRUE)
+
+map_df(fit_rs2$.extracts, ~ .x[[1]][[1]]) |> 
+  summarise(mean_adj_rsq = mean(adj.r.squared), 
+            mean_aic = mean(AIC), 
+            mean_bic = mean(BIC))
+
+```
+
+profit_gender ~ sum_partic_men + sum_partic_women + gender + ef_total_count
+
+```{r}
+rec3 <-  recipe(profit_gender ~ sum_partic_men + sum_partic_women + gender + ef_total_count, 
+                    data = train) |>
+  step_naomit() |>
+  step_center(sum_partic_men, sum_partic_women, ef_total_count) |>
+  step_dummy(all_nominal_predictors()) |>
+  step_zv(all_predictors())
+
+wflow3 <- workflow() |>
+  add_model(spec) |> 
+  add_recipe(rec3) 
+
+fit_rs3 <- wflow3 |>
+  fit_resamples(resamples = folds,
+                control = control_resamples(extract = calc_model_stats))
+
+```
+
+```{r}
+collect_metrics(fit_rs3, summarize = TRUE)
+
+map_df(fit_rs3$.extracts, ~ .x[[1]][[1]]) |> 
+  summarise(mean_adj_rsq = mean(adj.r.squared), 
+            mean_aic = mean(AIC), 
+            mean_bic = mean(BIC))
+
+```
+Select workflow3
+```{r}
+fit <- wflow3 |>
+  fit(data = train)
+
+tidy(fit) |>
+  kable(digits = 3)
+```
+Significant predictors are women's participation rate, total number of students, and gender.
+
+**model2**
+Response variable: Profit (total profit)
+
+`gender_r`: gender ratio of student population (male population count / female population count)
+```{r}
+basketball_m1 <- basketball |>
+  mutate(gender_r = ef_male_count / ef_female_count)
+```
+
+
+```{r}
+split_1 <- initial_split(basketball_m1, prop = 0.75)
+train_1 <- training(split_1)
+test_1 <- testing(split_1)
+
+folds_1 <- vfold_cv(train_1, v = 12)
+
+spec_1 <- linear_reg() |>
+  set_engine("lm")
+
+```
+
+profit ~ sum_partic_men + sum_partic_women + sector_name + gender_r
+                + ef_total_count + classification_name
+```{r}
+rec1_1 <- recipe(profit ~ sum_partic_men + sum_partic_women + sector_name + gender_r
+                + ef_total_count + classification_name, 
+                    data = train_1) |>
+  step_naomit() |>
+  step_other(classification_name, threshold = 80, other = "Other") |>
+  step_center(sum_partic_men, sum_partic_women, gender_r, ef_total_count) |>
+  step_dummy(all_nominal_predictors()) |>
+  step_zv(all_predictors())
+
+wflow1_1 <- workflow() |>
+  add_model(spec_1) |> 
+  add_recipe(rec1_1) 
+
+fit_rs1_1 <- wflow1_1 |>
+  fit_resamples(resamples = folds_1,
+                control = control_resamples(extract = calc_model_stats))
+
+```
+
+```{r}
+collect_metrics(fit_rs1_1, summarize = TRUE)
+
+map_df(fit_rs1_1$.extracts, ~ .x[[1]][[1]]) |> 
+  summarise(mean_adj_rsq = mean(adj.r.squared), 
+            mean_aic = mean(AIC), 
+            mean_bic = mean(BIC))
+
+```
+
+profit ~ sum_partic_men + sum_partic_women + gender_r
+                + ef_total_count + classification_name
+```{r}
+rec2_1 <-  recipe(profit ~ sum_partic_men + sum_partic_women + gender_r
+                + ef_total_count + classification_name, 
+                    data = train_1) |>
+  step_naomit() |>
+  step_other(classification_name, threshold = 80, other = "Other") |>
+  step_center(sum_partic_men, sum_partic_women, gender_r, ef_total_count) |>
+  step_dummy(all_nominal_predictors()) |>
+  step_zv(all_predictors())
+
+wflow2_1 <- workflow() |>
+  add_model(spec_1) |> 
+  add_recipe(rec2_1) 
+
+fit_rs2_1 <- wflow2_1 |>
+  fit_resamples(resamples = folds_1,
+                control = control_resamples(extract = calc_model_stats))
+
+```
+
+```{r}
+collect_metrics(fit_rs2_1, summarize = TRUE)
+
+map_df(fit_rs2_1$.extracts, ~ .x[[1]][[1]]) |> 
+  summarise(mean_adj_rsq = mean(adj.r.squared), 
+            mean_aic = mean(AIC), 
+            mean_bic = mean(BIC))
+
+```
+
+profit ~ sum_partic_men + sum_partic_women + ef_total_count + gender_r
+```{r}
+rec3_1 <-  recipe(profit ~ sum_partic_men + sum_partic_women + ef_total_count + gender_r, 
+                    data = train_1) |>
+  step_naomit() |>
+  step_center(sum_partic_men, sum_partic_women, gender_r, ef_total_count) |>
+  step_dummy(all_nominal_predictors()) |>
+  step_zv(all_predictors())
+
+wflow3_1 <- workflow() |>
+  add_model(spec_1) |> 
+  add_recipe(rec3_1) 
+
+fit_rs3_1 <- wflow3_1 |>
+  fit_resamples(resamples = folds_1,
+                control = control_resamples(extract = calc_model_stats))
+
+```
+
+```{r}
+collect_metrics(fit_rs3_1, summarize = TRUE)
+
+map_df(fit_rs3_1$.extracts, ~ .x[[1]][[1]]) |> 
+  summarise(mean_adj_rsq = mean(adj.r.squared), 
+            mean_aic = mean(AIC), 
+            mean_bic = mean(BIC))
+
+```
+
+Select workflow3
+```{r}
+fit_1 <- wflow3_1 |>
+  fit(data = train_1)
+
+tidy(fit_1) |>
+  kable(digits = 3)
+```
+
+Significant predictors are women's participation rate and total number of students.
