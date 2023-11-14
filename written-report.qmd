@@ -9,6 +9,7 @@ execute:
   echo: false
 editor: visual
 ---
+
 ```{r}
 #| label: model-stats-function
 calc_model_stats <- function(x) {
@@ -204,17 +205,17 @@ The lines are not parallel indicating there is an interaction effect. The slope 
 
 This section includes a brief description of your modeling process. Explain the reasoning for the type of model you're fitting, predictor variables considered for the model including any interactions. Additionally, show how you arrived at the final model by describing the model selection process, any variable transformations (if needed), and any other relevant considerations that were part of the model fitting process.
 
-We plan to use a multiple linear regression to predict the profit profit (revenue - expenditure) in USD of the collegiate sport basketball using participation rate, school sector name, gender, total count of students, and school classification name. 
+We plan to use a multiple linear regression to predict the profit profit (revenue - expenditure) in USD of the collegiate sport basketball using participation rate, school sector name, gender ratio, total count of students, and school classification name. For the predictor gender ratio, we will mutate the data and divide the total male student count by total female student count.
 
 For the response variable, we decided to predict the profit, subtracting the expenditure variable from the revenue variable, instead of predicting the revenue variable and using the expenditure variable as a predictor because we anticipate that the revenue variable and the expenditure variable will have strong correlations. Expenditure will be strongly correlated with the revenue of the sport basketball because schools often allocate significant financial resources to their sports programs, scholarships, and marketing. As these investments increase, the expectation is that they will have a direct impact on the overall revenue generated through different resources such as ticket sales. 
 
 For this reason, we decided that using expenditure to predict the revenue will not produce a meaningful result in choosing the best predictors as expenditure may already significantly affect the revenue, muting the effects of all the other predictors. 
 
-For the predictors, we anticipate that **participation rate** will be a key predictor of the total profit of the sport basketball because schools may allocate more money to this sport if there is more participation from the students. We also expect that the type of school **(sector name)** will be a strong predictor of profit because different types of schools have varying levels of resources, alumni support, and participation rates in sports depending on school size and program. **Gender** is another predictor to consider because sports could be hugely dependent on the demographics of players. 
+For the predictors, we anticipate that **participation ratio** will be a key predictor of the total profit of the sport basketball because schools may allocate more money to this sport if there is more participation from the students. We also expect that the type of school **(sector name)** will be a strong predictor of profit because different types of schools have varying levels of resources, alumni support, and participation rates in sports depending on school size and program. **Gender ratio** is another predictor to consider because sports could be hugely dependent on the demographics of players. 
 
-We also anticipate interaction effects which we will do further analysis in our results. Specifically, we believe the participation rate and the school sector type will have a correlation. This is because we expect the participation rate to be very dependent on the levels of investment, competitive levels, institutional culture, and student demographics which vary based on the type of institution(sector name). 
+We also anticipate interaction effects which we will do further analysis in our results. Specifically, we believe the participation rate and the school sector type will have a correlation. This is because we expect the participation rate to be very dependent on the levels of investment, competitive levels, institutional culture, and student demographics which vary based on the type of institution(sectorname). 
 
-To prepare the variables for our analysis, we plan to use a recipe. First, we plan to drop all the NA values using step_naomit(). Then, we plan to drop variables using step_rm() such as sum of participation for men and women that we will not use to fit the model. Next, we plan to use step_zv() to remove all predictors that contain only a single value. Finally, we plan to create dummy variables using step_dummy() for all nominal predictors which are Classification name, Sector name, and Gender. 
+To prepare the variables for our analysis, we plan to use a recipe. First, we plan to drop all the NA values using `step_naomit()`. Then, we plan to drop variables using `step_rm()` such as sum of participation for men and women that we will not use to fit the model. Next, we plan to use `step_zv()` to remove all predictors that contain only a single value. We plan to create dummy variables using `step_dummy()` for all nominal predictors which are Classification name, Sector name, and Gender ratio. Lastly, we will be using `step_center()` to mean center our predictors.
 
 #### Results
 
@@ -222,15 +223,14 @@ In this section, you will output the final model and include a brief discussion 
 
 This section also includes initial interpretations and conclusions drawn from the model.
 
-
 Response variable: Profit (total profit)
 
 `gender_r`: gender ratio of student population (male population count / female population count)
+
 ```{r}
 basketball_m <- basketball |>
   mutate(gender_r = ef_male_count / ef_female_count)
 ```
-
 
 ```{r}
 split <- initial_split(basketball_m, prop = 0.75)
@@ -243,7 +243,6 @@ spec <- linear_reg() |>
   set_engine("lm")
 
 ```
-
 
 ```{r}
 rec1 <- recipe(profit ~ total_partc + sector_name + gender_r
@@ -275,7 +274,6 @@ map_df(fit_rs1$.extracts, ~ .x[[1]][[1]]) |>
 
 ```
 
-
 ```{r}
 rec2 <-  recipe(profit ~ total_partc + gender_r
                 + ef_total_count + classification_name, 
@@ -306,7 +304,6 @@ map_df(fit_rs2$.extracts, ~ .x[[1]][[1]]) |>
 
 ```
 
-
 ```{r}
 rec3 <-  recipe(profit ~ total_partc + ef_total_count + gender_r, 
                     data = train) |>
@@ -336,6 +333,7 @@ map_df(fit_rs3$.extracts, ~ .x[[1]][[1]]) |>
 ```
 
 Select workflow3
+
 ```{r}
 fit_1 <- wflow3 |>
   fit(data = train)
