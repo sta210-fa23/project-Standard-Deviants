@@ -251,7 +251,7 @@ rec1 <- recipe(profit ~ total_partc + sector_name + gender_r
                     data = train) |>
   step_naomit() |>
   step_other(classification_name, threshold = 80, other = "Other") |>
-  step_center(sum_partic_men, sum_partic_women, gender_r, ef_total_count) |>
+  step_center(total_partc, gender_r, ef_total_count) |>
   step_dummy(all_nominal_predictors()) |>
   step_zv(all_predictors())
 
