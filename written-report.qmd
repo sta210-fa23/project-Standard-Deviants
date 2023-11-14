@@ -220,7 +220,7 @@ To prepare the variables for our analysis, we plan to use a recipe. First, we pl
 
 #### Results
 
-```{r}
+```{r clean-data}
 basketball_m <- basketball |>
   mutate(men_rev_mill = rev_men / 1000000, women_rev_mill = rev_women / 1000000,
          men_exp_mill = exp_men / 1000000, women_exp_mill = exp_women / 1000000) |>
@@ -237,7 +237,7 @@ basketball_m <- basketball_m |>
          profit_r != "-Inf")
 ```
 
-```{r, include = FALSE}
+```{r split, include = FALSE}
 set.seed(21006)
 
 split <- initial_split(basketball_m, prop = 0.75)
@@ -251,7 +251,7 @@ spec <- linear_reg() |>
 
 ```
 
-```{r, include = FALSE}
+```{r recipe, include = FALSE}
 rec1 <- recipe(profit ~ total_partc + sector_name + gender_r
                 + ef_total_count + classification_name + profit_r, 
                     data = train) |>
@@ -271,7 +271,7 @@ fit_rs1 <- wflow1 |>
 
 ```
 
-```{r, include = FALSE}
+```{r AIC-BIC, include = FALSE}
 collect_metrics(fit_rs1, summarize = TRUE)
 
 map_df(fit_rs1$.extracts, ~ .x[[1]][[1]]) |> 
@@ -281,7 +281,7 @@ map_df(fit_rs1$.extracts, ~ .x[[1]][[1]]) |>
 
 ```
 
-```{r, include = FALSE}
+```{r recipe-two, include = FALSE}
 rec2 <-  recipe(profit ~ total_partc + gender_r
                 + ef_total_count + classification_name + profit_r, 
                     data = train) |>
@@ -301,7 +301,7 @@ fit_rs2 <- wflow2 |>
 
 ```
 
-```{r, include = FALSE}
+```{r metric-two, include = FALSE}
 collect_metrics(fit_rs2, summarize = TRUE)
 
 map_df(fit_rs2$.extracts, ~ .x[[1]][[1]]) |> 
@@ -311,7 +311,7 @@ map_df(fit_rs2$.extracts, ~ .x[[1]][[1]]) |>
 
 ```
 
-```{r, include = FALSE}
+```{r recipe-three, include = FALSE}
 rec3 <-  recipe(profit ~ total_partc + ef_total_count + gender_r + profit_r, 
                     data = train) |>
   step_naomit() |>
@@ -331,7 +331,7 @@ fit_rs3 <- wflow3 |>
 
 Our final model uses the predictor of total participation rate, total count of students, gender ratio, and profit by gender ratio.
 
-```{r}
+```{r fit-model}
 fit <- wflow3 |>
   fit(data = train)
 
@@ -341,7 +341,7 @@ tidy(fit) |>
 
 -   Model fit statistics
 
-```{r}
+```{r metrics-final}
 collect_metrics(fit_rs3, summarize = TRUE)
 
 map_df(fit_rs3$.extracts, ~ .x[[1]][[1]]) |> 
@@ -357,7 +357,7 @@ Our initial model including total participation rate, school sector name, gender
 
 -   Model diagnostics
 
-```{r}
+```{r vif}
 fit <- extract_fit_parsnip(fit)
 
 vif(fit$fit)
@@ -365,7 +365,7 @@ vif(fit$fit)
 
 There is no variable with $VIF > 10$ that indicates concerning multicollinearity, so no apparent issue with multicollinearity is found.
 
-```{r}
+```{r find-rmse}
 train_pred <- predict(fit, train) |>
   bind_cols(train)
 
