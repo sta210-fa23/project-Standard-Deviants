@@ -237,7 +237,7 @@ basketball_m <- basketball_m |>
          profit_r != "-Inf")
 ```
 
-```{r split, include = FALSE}
+```{r split}
 set.seed(21006)
 
 split <- initial_split(basketball_m, prop = 0.75)
@@ -251,7 +251,7 @@ spec <- linear_reg() |>
 
 ```
 
-```{r recipe, include = FALSE}
+```{r recipe}
 rec1 <- recipe(profit ~ total_partc + sector_name + gender_r
                 + ef_total_count + classification_name + profit_r, 
                     data = train) |>
@@ -271,7 +271,7 @@ fit_rs1 <- wflow1 |>
 
 ```
 
-```{r AIC-BIC, include = FALSE}
+```{r AIC-BIC}
 collect_metrics(fit_rs1, summarize = TRUE)
 
 map_df(fit_rs1$.extracts, ~ .x[[1]][[1]]) |> 
@@ -281,7 +281,7 @@ map_df(fit_rs1$.extracts, ~ .x[[1]][[1]]) |>
 
 ```
 
-```{r recipe-two, include = FALSE}
+```{r recipe-two}
 rec2 <-  recipe(profit ~ total_partc + gender_r
                 + ef_total_count + classification_name + profit_r, 
                     data = train) |>
@@ -301,7 +301,7 @@ fit_rs2 <- wflow2 |>
 
 ```
 
-```{r metric-two, include = FALSE}
+```{r metric-two}
 collect_metrics(fit_rs2, summarize = TRUE)
 
 map_df(fit_rs2$.extracts, ~ .x[[1]][[1]]) |> 
@@ -311,7 +311,7 @@ map_df(fit_rs2$.extracts, ~ .x[[1]][[1]]) |>
 
 ```
 
-```{r recipe-three, include = FALSE}
+```{r recipe-three}
 rec3 <-  recipe(profit ~ total_partc + ef_total_count + gender_r + profit_r, 
                     data = train) |>
   step_naomit() |>
@@ -381,4 +381,4 @@ The RMSE for the training data which is 1.454625 while the RMSE for testing data
 
 **Model Interpretations and Conclusions**
 
-Significant predictor is total count of students with a p-value smaller than 0.05. For each hundred increase in the total count of students, the school's basketball profit is expected to increase by 0.002 million dollars.
+Significant predictor is total count of students with a p-value smaller than 0.05. For each hundred increase in the total count of students, the school's basketball profit is expected to increase by 0.002 million dollars. Furthermore, when comparing the VIC and BIC of multiple models to predict profit, we concluded that the best model to fit the data was the model that includes total participation rate, total student count, gender ratio, and profit ratio.
