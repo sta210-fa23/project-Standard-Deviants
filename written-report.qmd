@@ -70,7 +70,7 @@ basketball <- sports |>
   ggplot(aes(x = profit)) +
   geom_histogram(fill = "dark green") +
   scale_x_log10() +
-  labs(title = "Distribution of Positive Profit (in log million $)",
+  labs(title = "Distribution of Positive Profit \n (in log million $)",
        x = "Log 10 of the Positive Profits", y = "Count") +
   theme(plot.title = element_text(size = 10))
 
@@ -79,7 +79,7 @@ profit2 <- basketball |>
   ggplot(aes(x = abs(profit))) +
   geom_histogram(fill = "red") +
   scale_x_log10() +
-  labs(title = "Distribution of Profit Losses (in log million $)",
+  labs(title = "Distribution of Profit Losses \n (in log million $)",
        x = "Log 10 of the Negative Profits", y = "Count") +
   theme(plot.title = element_text(size = 10))
 
