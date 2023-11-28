@@ -184,6 +184,7 @@ basketball |>
    theme(plot.title = element_text(size = 10))
 
 ```
+
 Looking at the relationships above, it seems that the medians of each type of school's profit is around \$0. We can also see that Public, 4 year or above colleges have the highest recorded profit in USD, and that Private nonprofit, 4 year or above colleges have the lowest profit in USD.
 
 Looking at the participation rate graphs, there seems to be slightly more participation of women than of men, as many of the data points are more spread out to the right of the graph for women while there is a conglomerate of data points centered around 20% for men's participation rate. There seems to be a very weak almost negative linear relationship between participation rate versus profit, as most of the data points are centered around \$0 profit regardless of participation rate. However, looking at the mens participation rate specifically, it seems schools classified with sports as NCAA Division I-FBS have the highest profits and highest range of profits. Schools classified as NAIA Division II and NCAA Division II without football seem to have high mens participation rates. For womens participation rate, it shows the same thing as mens, however there tends to be greater participation rate of women than men in NCAA Division I-FBS schools.
@@ -380,6 +381,7 @@ The final model has a AIC of 1989.851 and a BIC of 2015.731.
 Our initial model including total participation rate, school sector name, gender ratio, total student count, classification name, and profit by gender ratio has a AIC of 2003.095 and a BIC of 2062.62. When we reduce the sector name variable, the AIC decreases to 1995.288 and the BIC decreases to 2037.56. We choose our final model that further reduce the classification name variable since it has the lowest AIC and BIC. We decide not to further reduce the terms in the model to have sufficient predictor variables for the response variable.
 
 -   Model diagnostics
+
 ```{r vif}
 fit <- extract_fit_parsnip(fit)
 
@@ -402,9 +404,10 @@ rmse(test_pred, truth = profit, estimate = .pred)
 
 The RMSE for the training data which is 1.077032 while the RMSE for testing data is 0.7771352. Since we have a reasonably small difference in the RMSE, there is no apparent sign of model overfit. The model can generalize to new data.
 
--  Interaction Terms
+-   Interaction Terms
 
-To see if there are interaction terms, we will be using `step_interact()`. 
+To see if there are interaction terms, we will be using `step_interact()`.
+
 ```{r}
 
 rec3_int <-  recipe(profit ~ total_partc + ef_total_count + gender_r + perc_wom_exp, 
@@ -425,13 +428,10 @@ fit_rs3_int <- wflow3_int |>
 
 ```
 
-
 **Discussion + Conclusion**
 
-Looking at each predictor's p values, the most significant predictor is total count of students with a p-value smaller than 0.05 where we can reject the null hypothesis that total count of students has no significant effect to profit.
-In terms of the coefficient of total count of students, we can give the following interpretation. For each hundred increase in the total count of students, the school's basketball profit is expected to increase by 0.002 million dollars. 
-Furthermore, when comparing the AIC and BIC of multiple models to predict profit, we concluded that the best model to fit the data was the model that includes total participation rate, total student count, gender ratio, and profit ratio. Checking to see if there were any interaction terms by using the ____, 
+Looking at each predictor's p values, the most significant predictor is total count of students with a p-value smaller than 0.05 where we can reject the null hypothesis that total count of students has no significant effect to profit. In terms of the coefficient of total count of students, we can give the following interpretation. For each hundred increase in the total count of students, the school's basketball profit is expected to increase by 0.002 million dollars. Furthermore, when comparing the AIC and BIC of multiple models to predict profit, we concluded that the best model to fit the data was the model that includes total participation rate, total student count, gender ratio, and profit ratio. Checking to see if there were any interaction terms by using the \_\_\_\_,
 
-While our study provides a comprehensive analysis of the factors influencing profit in collegiate basketball, there is room for improvement. One of the limitations of our research was that there may be more predictors outside the scope of our dataset that influences the profit of collegiate basketball. Also, the school year 2019-2020 was mainly when COVID 19 affected many schools and especially sports activities. We anticipate that the data collected during this timeline may not be applicable for other years without COVID. 
+While our study provides a comprehensive analysis of the factors influencing profit in collegiate basketball, there is room for improvement. One of the limitations of our research was that there may be more predictors outside the scope of our dataset that influences the profit of collegiate basketball. Also, the school year 2019-2020 was mainly when COVID 19 affected many schools and especially sports activities. We anticipate that the data collected during this timeline may not be applicable for other years without COVID.
 
-In conclusion, we anticipate that the implications of our research predicting profit generation in collegiate basketball holds profound meaning in multiple domains such as in academia, sports management, and educational governance to foster an environment conducive to the holistic development of student-athletes. As a future direction, we would like to not just look at trends from the school year 2019-2020, but delve into longitudinal trends within collegiate basketball profitability by analyzing data spanning multiple seasons. We would also like to further our study by incorporating external factors that may influence profitability such as global events and changes in sports culture to get a nuanced perspective of our predictive model. 
+In conclusion, we anticipate that the implications of our research predicting profit generation in collegiate basketball holds profound meaning in multiple domains such as in academia, sports management, and educational governance to foster an environment conducive to the holistic development of student-athletes. As a future direction, we would like to not just look at trends from the school year 2019-2020, but delve into longitudinal trends within collegiate basketball profitability by analyzing data spanning multiple seasons. We would also like to further our study by incorporating external factors that may influence profitability such as global events and changes in sports culture to get a nuanced perspective of our predictive model.
