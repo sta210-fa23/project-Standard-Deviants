@@ -224,19 +224,8 @@ Then, we plan to use `step_zv()` to remove all predictors that contain only a si
 
 ```{r clean-data}
 basketball_m <- basketball |>
-  mutate(men_rev_mill = rev_men / 1000000, women_rev_mill = rev_women / 1000000,
-         men_exp_mill = exp_men / 1000000, women_exp_mill = exp_women / 1000000) |>
-  mutate(men_profit = men_rev_mill - men_exp_mill, 
-         women_profit = women_rev_mill - women_exp_mill) |>
   mutate(gender_r = ef_male_count / ef_female_count,
-         total_partc = ((ef_male_count * sum_partic_men/100) + (ef_female_count * sum_partic_women/100))/ef_total_count,
-         profit_r = men_profit / women_profit)
-
-basketball_m <- basketball_m |>
-  filter(!is.na(profit_r)) |>
-  filter(profit_r != "NaN", 
-         profit_r != "Inf", 
-         profit_r != "-Inf")
+         total_partc = ((ef_male_count * sum_partic_men/100) + (ef_female_count * sum_partic_women/100))/ef_total_count)
 ```
 
 *Checking Model Conditions:*
@@ -245,8 +234,7 @@ basketball_m <- basketball_m |>
 basketball_mult_fit <- linear_reg() |>
   set_engine("lm") |>
   fit(profit ~ total_partc + sector_name + gender_r
-      + ef_total_count + perc_wom_exp + 
-        classification_name + profit_r, data = basketball_m)
+      + ef_total_count + perc_wom_exp + classification_name, data = basketball_m)
 
 basketball_aug_mult <- augment(basketball_mult_fit$fit)
 ```
@@ -275,7 +263,7 @@ We can see the normality condition is satisfied as the residuals are normally di
 #### Results
 
 ```{r split}
-set.seed(21006)
+set.seed(2023)
 
 split <- initial_split(basketball_m, prop = 0.75)
 train <- training(split)
@@ -290,11 +278,11 @@ spec <- linear_reg() |>
 
 ```{r recipe}
 rec1 <- recipe(profit ~ total_partc + sector_name + gender_r
-                + ef_total_count + perc_wom_exp + classification_name + profit_r, 
+                + ef_total_count + classification_name + perc_wom_exp, 
                     data = train) |>
   step_naomit() |>
   step_other(classification_name, threshold = 50, other = "Other") |>
-  step_center(total_partc, gender_r, ef_total_count, profit_r) |>
+  step_center(total_partc, gender_r, ef_total_count) |>
   step_dummy(all_nominal_predictors()) |>
   step_zv(all_predictors())
 
@@ -320,11 +308,11 @@ map_df(fit_rs1$.extracts, ~ .x[[1]][[1]]) |>
 
 ```{r recipe-two}
 rec2 <-  recipe(profit ~ total_partc + gender_r
-                + ef_total_count + classification_name + profit_r, 
+                + ef_total_count + classification_name + perc_wom_exp, 
                     data = train) |>
   step_naomit() |>
   step_other(classification_name, threshold = 50, other = "Other") |>
-  step_center(total_partc, gender_r, ef_total_count, profit_r) |>
+  step_center(total_partc, gender_r, ef_total_count) |>
   step_dummy(all_nominal_predictors()) |>
   step_zv(all_predictors())
 
@@ -349,10 +337,10 @@ map_df(fit_rs2$.extracts, ~ .x[[1]][[1]]) |>
 ```
 
 ```{r recipe-three}
-rec3 <-  recipe(profit ~ total_partc + ef_total_count + gender_r + profit_r, 
+rec3 <-  recipe(profit ~ total_partc + ef_total_count + gender_r + perc_wom_exp, 
                     data = train) |>
   step_naomit() |>
-  step_center(total_partc, gender_r, ef_total_count, profit_r) |>
+  step_center(total_partc, gender_r, ef_total_count, perc_wom_exp) |>
   step_dummy(all_nominal_predictors()) |>
   step_zv(all_predictors())
 
@@ -366,7 +354,7 @@ fit_rs3 <- wflow3 |>
 
 ```
 
-Our final model uses the predictor of total participation rate, total count of students, gender ratio, and profit by gender ratio.
+Our final model uses the predictor of total participation rate, total count of students, gender ratio, and percentage of women expenditure.
 
 ```{r fit-model}
 fit <- wflow3 |>
@@ -414,7 +402,7 @@ test_pred <- predict(fit, test) |>
 rmse(test_pred, truth = profit, estimate = .pred)
 ```
 
-The RMSE for the training data which is 1.454625 while the RMSE for testing data is 1.335227. Since we have a reasonably small difference in the RMSE, there is no apparent sign of model overfit. The model can generalize to new data.
+The RMSE for the training data which is 1.077032 while the RMSE for testing data is 0.7771352. Since we have a reasonably small difference in the RMSE, there is no apparent sign of model overfit. The model can generalize to new data.
 
 **Model Interpretations and Conclusions**
 
