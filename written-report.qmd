@@ -48,7 +48,7 @@ This data is submitted annually from colleges to the EADA. All co-educational po
 
 The dataset we will use from the data scraped on Tidy Tuesday include many observations regarding collegiate sports. These observations include variables such as the name of the city which a school is in, the state, the school name, the classification of the school (like whether it is NCAA Division I, II, or III), the type/sector name of the school (like 4 year accredited university), sport, and many quantitative variables regarding characteristics about the specific school and their collegiate spending. Most of the quantitative variables are split between men and women, having two different observations for the same variable. For example, there is total male population, total female population, participation rate of women, participation rate of men, revenue for men, revenue for women, expenditures for men, and expenditures for women. There are also observations for the total amount for each of these above variables which includes both men and women; for example, total expenditures for both men and women together. The observations are therefore both quantitative and categorical and measure characteristics of different school's spending, revenue, populations, locations, and sports.
 
-The key variables we will use are **participation rate** which is the total percentage of men and women students who participate in sports, **sector school name** which is the type of school for example, public, 4-year or above, **gender ratio** which is the male population count divided by female population count, **total count of students** which is the total amount of students enrolled in the college, women expenditure percent which is the percentage of expenditures that goes towards woman's sports (which we calculated by taking a school's expenditures of women and dividing it by the school's total expenditures), **school classification name** which is a school\\'s sports classification for example NCAA Division I-FCS. Then, our response variable is **profit** which is calculated by the total revenue of the school for basketball minus the expenditures of the school for basketball.
+The key variables we will use are **participation rate** which is the total percentage of men and women students who participate in sports, **sector school name** which is the type of school for example, public, 4-year or above, **gender ratio** which is the male population count divided by female population count, **total count of students** which is the total amount of students enrolled in the college, women expenditure percent which is the percentage of expenditures that goes towards woman's sports (which we calculated by taking a school's expenditures of women and dividing it by the school's total expenditures), **school classification name** which is a school\\'s sports classification for example NCAA Division I-FCS. Lastly, we will use **percentage of women expenditure** which is women expenditure divided by the total expenditure. Then, our response variable is **profit** which is calculated by the total revenue of the school for basketball minus the expenditures of the school for basketball.
 
 For data cleaning, we need to filter for observations that have `Basketball` as the sports and filter out missing values. we also need to filter out observations that have missing values of the predictor variables we need in the model. We need to create new variables by mutation to turn variables involving revenue and expenditure into the unit of millions and total student count into the unit of hundreds, so that we can get larger coefficients for better modeling. We create the new response variable of profit and new predictor variable of woman's expenditure percent.
 
@@ -377,37 +377,6 @@ map_df(fit_rs3$.extracts, ~ .x[[1]][[1]]) |>
 
 The final model has a AIC of 1989.851 and a BIC of 2015.731.
 
-#### Results
-
-
-Our initial model including total participation rate, school sector name, gender ratio, total student count, classification name, and profit by gender ratio has a AIC of 2003.095 and a BIC of 2062.62. When we reduce the sector name variable, the AIC decreases to 1995.288 and the BIC decreases to 2037.56. We choose our final model that further reduce the classification name variable since it has the lowest AIC and BIC. We decide not to further reduce the terms in the model to have sufficient predictor variables for the response variable.
-
--   Model diagnostics
-
-```{r vif}
-fit <- extract_fit_parsnip(fit)
-
-vif(fit$fit)
-```
-
-There is no variable with $VIF > 10$ that indicates concerning multicollinearity, so no apparent issue with multicollinearity is found.
-
-```{r find-rmse}
-train_pred <- predict(fit, train) |>
-  bind_cols(train)
-
-rmse(train_pred, truth = profit, estimate = .pred)
-
-test_pred <- predict(fit, test) |>
-  bind_cols(test)
-
-rmse(test_pred, truth = profit, estimate = .pred)
-```
-
-The RMSE for the training data which is 1.077032 while the RMSE for testing data is 0.7771352. Since we have a reasonably small difference in the RMSE, there is no apparent sign of model overfit. The model can generalize to new data.
-
--   Interaction Terms
-
 To see if there are interaction terms, we will be using `step_interact()`. Because we ended up reducing the model taking out the sector name variable, we decided to check if there were any interaction effects between gender ratio and percentage of women expenditure with these variables having a connection with gender. 
 
 ```{r}
@@ -437,6 +406,35 @@ tidy(fit_int) |>
 
 ```
 Because the p value for `gender_r:perc_wom_exp` is about 0.56, we can conclude that there are no interaction effects between the two variables. 
+
+#### Results
+
+Our initial model including total participation rate, school sector name, gender ratio, total student count, classification name, and profit by gender ratio has a AIC of 2003.095 and a BIC of 2062.62. When we reduce the sector name variable, the AIC decreases to 1995.288 and the BIC decreases to 2037.56. We choose our final model that further reduce the classification name variable since it has the lowest AIC and BIC. We decide not to further reduce the terms in the model to have sufficient predictor variables for the response variable.
+
+-   Model diagnostics
+
+```{r vif}
+fit <- extract_fit_parsnip(fit)
+
+vif(fit$fit)
+```
+
+There is no variable with $VIF > 10$ that indicates concerning multicollinearity, so no apparent issue with multicollinearity is found.
+
+```{r find-rmse}
+train_pred <- predict(fit, train) |>
+  bind_cols(train)
+
+rmse(train_pred, truth = profit, estimate = .pred)
+
+test_pred <- predict(fit, test) |>
+  bind_cols(test)
+
+rmse(test_pred, truth = profit, estimate = .pred)
+```
+
+The RMSE for the training data which is 1.077032 while the RMSE for testing data is 0.7771352. Since we have a reasonably small difference in the RMSE, there is no apparent sign of model overfit. The model can generalize to new data.
+
 
 
 **Discussion + Conclusion**
