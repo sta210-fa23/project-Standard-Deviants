@@ -48,7 +48,7 @@ This data is submitted annually from colleges to the EADA. All co-educational po
 
 The dataset we will use from the data scraped on Tidy Tuesday include many observations regarding collegiate sports. These observations include variables such as the name of the city which a school is in, the state, the school name, the classification of the school (like whether it is NCAA Division I, II, or III), the type/sector name of the school (like 4 year accredited university), sport, and many quantitative variables regarding characteristics about the specific school and their collegiate spending. Most of the quantitative variables are split between men and women, having two different observations for the same variable. For example, there is total male population, total female population, participation rate of women, participation rate of men, revenue for men, revenue for women, expenditures for men, and expenditures for women. There are also observations for the total amount for each of these above variables which includes both men and women; for example, total expenditures for both men and women together. The observations are therefore both quantitative and categorical and measure characteristics of different school's spending, revenue, populations, locations, and sports.
 
-The key variables we will use are **participation rate** which is the total percentage of men and women students who participate in sports, **sector school name** which is the type of school for example, public, 4-year or above, **gender ratio** which is the male population count divided by female population count, **total count of students** which is the total amount of students enrolled in the college, women expenditure percent which is the percentage of expenditures that goes towards woman's sports (which we calculated by taking a school's expenditures of women and dividing it by the school's total expenditures), **school classification name** which is a school\\'s sports classification for example NCAA Division I-FCS. Lastly, we will use **percentage of women expenditure** which is women expenditure divided by the total expenditure. Then, our response variable is **profit** which is calculated by the total revenue of the school for basketball minus the expenditures of the school for basketball.
+The key variables we will use are **participation rate** which is the total percentage of men and women students who participate in sports, **sector school name** which is the type of school for example, public, 4-year or above, **gender ratio** which is the male population count divided by female population count, **total count of students** which is the total amount of students enrolled in the college, women expenditure percent which is the percentage of expenditures that goes towards woman's sports (which we calculated by taking a school's expenditures of women and dividing it by the school's total expenditures), **school classification name** which is a school\\'s sports classification for example NCAA Division I-FCS. Then, our response variable is **profit** which is calculated by the total revenue of the school for basketball minus the expenditures of the school for basketball.
 
 For data cleaning, we need to filter for observations that have `Basketball` as the sports and filter out missing values. we also need to filter out observations that have missing values of the predictor variables we need in the model. We need to create new variables by mutation to turn variables involving revenue and expenditure into the unit of millions and total student count into the unit of hundreds, so that we can get larger coefficients for better modeling. We create the new response variable of profit and new predictor variable of woman's expenditure percent.
 
@@ -208,7 +208,7 @@ The lines are not parallel indicating there is an interaction effect. The slope 
 
 #### Methodology
 
-We plan to use a multiple linear regression to predict the profit (revenue - expenditure) in USD of the collegiate sport basketball using participation rate, school sector name, gender ratio, women expendtiture percent, total count of students, and school classification name. For the predictor gender ratio, we will mutate the data and divide the total male student count by total female student count. For the predictor women expenditure percent, we will mutate the data and divide a school's woman's expenditure by total expenditure.
+We plan to use a multiple linear regression to predict the profit (revenue - expenditure) in USD of the collegiate sport basketball using participation rate, school sector name, gender ratio, percentage of women expenditure, total count of students, and school classification name. For the predictor gender ratio, we will mutate the data and divide the total male student count by total female student count. For the predictor percentage of women expenditure, we will mutate the data and divide a school's woman's expenditure by total expenditure.
 
 For the response variable, we decided to predict the profit, subtracting the expenditure variable from the revenue variable, instead of predicting the revenue variable and using the expenditure variable as a predictor because we anticipate that the revenue variable and the expenditure variable will have strong correlations. Expenditure will be strongly correlated with the revenue of the sport basketball because schools often allocate significant financial resources to their sports programs, scholarships, and marketing. As these investments increase, the expectation is that they will have a direct impact on the overall revenue generated through different resources such as ticket sales. 
 
@@ -226,7 +226,65 @@ basketball_m <- basketball |>
          total_partc = ((ef_male_count * sum_partic_men/100) + (ef_female_count * sum_partic_women/100))/ef_total_count)
 ```
 
+*Checking Model Conditions:*
+
+```{r mult_fit}
+basketball_mult_fit <- linear_reg() |>
+  set_engine("lm") |>
+  fit(profit ~ total_partc + sector_name + gender_r
+      + ef_total_count + perc_wom_exp + classification_name, data = basketball_m)
+
+basketball_aug_mult <- augment(basketball_mult_fit$fit)
+```
+
+```{r check-resid}
+ggplot(data = basketball_aug_mult, aes(x = .fitted, y = .resid)) + 
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", 
+       y = "Residuals", 
+       title = "Residuals vs. fitted")
+```
+
+Constant variance is met because there is an even amount of residuals above and below the horizontal line. Linearity may not be met. We can see that there is a conglomerate of points that shape a almost negative line around the y intercept. However, there is a random scatter of points around this. This should be kept in mind and show that a linear model may not be the best regression model to use.
+
+```{r normal-res}
+ggplot(data = basketball_aug_mult, aes(x = .resid)) +
+  geom_histogram() +
+  labs(x = "Residuals", 
+       y = "Count", 
+       title = "Distribution of residuals")
+```
+
+We can see the normality condition is satisfied as the residuals are normally distributed and the sample has more than 30 observations. Independence is also satisfied because of how the data was taken. Collegiate information about one school is independent of another school.
+
 To avoid overfitting the data, we then split the dataset into the training and the test data, and we used cross validation using 20 folds. Then we used our recipe to fit our models. Using the models, we calculated AIC and BIC to evaluate each model fit.
+
+Log transform
+
+```{r}
+basketball_m <- basketball_m |>
+  mutate(log_profit = case_when(
+    sign(profit) == 1 ~ log(profit),
+    sign(profit) == -1 ~ -log(-profit)
+  ))
+
+```
+
+```{r}
+basketball_mult_fit_log <- linear_reg() |>
+  set_engine("lm") |>
+  fit(log_profit ~ total_partc + sector_name + gender_r
+      + ef_total_count + perc_wom_exp + classification_name, data = basketball_m)
+
+basketball_aug_mult_log <- augment(basketball_mult_fit_log$fit)
+ggplot(data = basketball_aug_mult_log, aes(x = .fitted, y = .resid)) + 
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", 
+       y = "Residuals", 
+       title = "Residuals vs. fitted")
+```
 
 ```{r split}
 set.seed(2023)
@@ -245,7 +303,7 @@ spec <- linear_reg() |>
 To prepare the variables for our analysis, we plan to use a recipe. First, we plan to drop all the NA values using `step_naomit()`. We decided to drop NA values to ensure that the values we do use are accurate. For example, the data set has observations with NA values in women's participation rate. However, when the sum participation rate for women is calculated, the data set represents this sum with 0. This 0 can skew the regression model when the true participation rate of women may not be 0. Since we are using total participation rate in our model, it is best to drop NA values. Also, considering that the data set has 775 observations after all NA's are dropped, we still have a lot of reliable data to use for modeling. Then, we plan to use `step_zv()` to remove all predictors that contain only a single value. We plan to create dummy variables using `step_dummy()` for all nominal predictors which are Classification name and Sector name. Lastly, we will be using `step_center()` to mean center our quantitative predictors.
 
 ```{r recipe}
-rec1 <- recipe(profit ~ total_partc + sector_name + gender_r
+rec1 <- recipe(log_profit ~ total_partc + sector_name + gender_r
                 + ef_total_count + classification_name + perc_wom_exp, 
                     data = train) |>
   step_naomit() |>
@@ -275,7 +333,7 @@ map_df(fit_rs1$.extracts, ~ .x[[1]][[1]]) |>
 ```
 
 ```{r recipe-two}
-rec2 <-  recipe(profit ~ total_partc + gender_r
+rec2 <-  recipe(log_profit ~ total_partc + gender_r
                 + ef_total_count + classification_name + perc_wom_exp, 
                     data = train) |>
   step_naomit() |>
@@ -305,7 +363,7 @@ map_df(fit_rs2$.extracts, ~ .x[[1]][[1]]) |>
 ```
 
 ```{r recipe-three}
-rec3 <-  recipe(profit ~ total_partc + ef_total_count + gender_r + perc_wom_exp, 
+rec3 <-  recipe(log_profit ~ total_partc + ef_total_count + gender_r + perc_wom_exp, 
                     data = train) |>
   step_naomit() |>
   step_center(total_partc, gender_r, ef_total_count, perc_wom_exp) |>
@@ -344,13 +402,43 @@ map_df(fit_rs3$.extracts, ~ .x[[1]][[1]]) |>
 
 ```
 
-The final model has a AIC of 1989.851 and a BIC of 2015.731.
+The final model has a AIC of 3879.914 and a BIC of 3911.228.
+
+#### Results
+
+Our initial model including total participation rate, school sector name, gender ratio, total student count, classification name, and profit by gender ratiopercentage of women expenditure has a AIC of 2003.095 and a BIC of 2062.62. When we reduce the sector name variable, the AIC decreases to 1995.288 and the BIC decreases to 2037.56. We choose our final model that further reduce the classification name variable since it has the lowest AIC and BIC. We decide not to further reduce the terms in the model to have sufficient predictor variables for the response variable.
+
+-   Model diagnostics
+
+```{r vif}
+fit <- extract_fit_parsnip(fit)
+
+vif(fit$fit)
+```
+
+There is no variable with $VIF > 10$ that indicates concerning multicollinearity, so no apparent issue with multicollinearity is found.
+
+```{r find-rmse}
+train_pred <- predict(fit, train) |>
+  bind_cols(train)
+
+rmse(train_pred, truth = profit, estimate = .pred)
+
+test_pred <- predict(fit, test) |>
+  bind_cols(test)
+
+rmse(test_pred, truth = profit, estimate = .pred)
+```
+
+The RMSE for the training data which is 1.077032 while the RMSE for testing data is 0.7771352. Since we have a reasonably small difference in the RMSE, there is no apparent sign of model overfit. The model can generalize to new data.
+
+-   Interaction Terms
 
 To see if there are interaction terms, we will be using `step_interact()`. Because we ended up reducing the model taking out the sector name variable, we decided to check if there were any interaction effects between gender ratio and percentage of women expenditure with these variables having a connection with gender.
 
 ```{r}
 
-rec3_int <-  recipe(profit ~ total_partc + ef_total_count + gender_r + perc_wom_exp, 
+rec3_int <-  recipe(log_profit ~ total_partc + ef_total_count + gender_r + perc_wom_exp, 
                     data = train) |>
   step_naomit() |>
   step_center(total_partc, gender_r, ef_total_count, perc_wom_exp) |>
@@ -376,65 +464,6 @@ tidy(fit_int) |>
 ```
 
 Because the p value for `gender_r:perc_wom_exp` is about 0.56, we can conclude that there are no interaction effects between the two variables.
-
-*Checking Model Conditions:*
-
-```{r mult_fit}
-basketball_mult_fit <- linear_reg() |>
-  set_engine("lm") |>
-  fit(profit ~ total_partc + gender_r + ef_total_count + perc_wom_exp, data = basketball_m)
-
-basketball_aug_mult <- augment(basketball_mult_fit$fit)
-```
-
-```{r check-resid}
-ggplot(data = basketball_aug_mult, aes(x = .fitted, y = .resid)) + 
-  geom_point() +
-  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
-  labs(x = "Fitted values", 
-       y = "Residuals", 
-       title = "Residuals vs. fitted")
-```
-
-Constant variance is met because there is an even amount of residuals above and below the horizontal line. Linearity may not be met. We can see that there is a conglomerate of points that shape a almost negative line around the y intercept. However, there is a random scatter of points around this. This should be kept in mind and show that a linear model may not be the best regression model to use.
-
-```{r normal-res}
-ggplot(data = basketball_aug_mult, aes(x = .resid)) +
-  geom_histogram() +
-  labs(x = "Residuals", 
-       y = "Count", 
-       title = "Distribution of residuals")
-```
-
-We can see the normality condition is satisfied as the residuals are normally distributed and the sample has more than 30 observations. Independence is also satisfied because of how the data was taken. Collegiate information about one school is independent of another school.
-
-#### Results
-
-Our initial model including total participation rate, school sector name, gender ratio, total student count, classification name, and profit by gender ratio has a AIC of 2003.095 and a BIC of 2062.62. When we reduce the sector name variable, the AIC decreases to 1995.288 and the BIC decreases to 2037.56. We choose our final model that further reduce the classification name variable since it has the lowest AIC and BIC. We decide not to further reduce the terms in the model to have sufficient predictor variables for the response variable.
-
--   Model diagnostics
-
-```{r vif}
-fit <- extract_fit_parsnip(fit)
-
-vif(fit$fit)
-```
-
-There is no variable with $VIF > 10$ that indicates concerning multicollinearity, so no apparent issue with multicollinearity is found.
-
-```{r find-rmse}
-train_pred <- predict(fit, train) |>
-  bind_cols(train)
-
-rmse(train_pred, truth = profit, estimate = .pred)
-
-test_pred <- predict(fit, test) |>
-  bind_cols(test)
-
-rmse(test_pred, truth = profit, estimate = .pred)
-```
-
-The RMSE for the training data which is 1.077032 while the RMSE for testing data is 0.7771352. Since we have a reasonably small difference in the RMSE, there is no apparent sign of model overfit. The model can generalize to new data.
 
 **Discussion + Conclusion**
 
