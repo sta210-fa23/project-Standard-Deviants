@@ -219,44 +219,12 @@ For the predictors, we anticipate that **participation rate** will be a key pred
 Additionally, we anticipate interaction effects which we will do further analysis in our results. Specifically, we believe the participation rate and the school sector type will have a correlation. This is because we expect the participation rate to be very dependent on the levels of investment, competitive levels, institutional culture, and student demographics which vary based on the type of institution(sectorname). 
 
 We first check the model's comditions.
+
 ```{r clean-data}
 basketball_m <- basketball |>
   mutate(gender_r = ef_male_count / ef_female_count,
          total_partc = ((ef_male_count * sum_partic_men/100) + (ef_female_count * sum_partic_women/100))/ef_total_count)
 ```
-
-*Checking Model Conditions:*
-
-```{r mult_fit}
-basketball_mult_fit <- linear_reg() |>
-  set_engine("lm") |>
-  fit(profit ~ total_partc + sector_name + gender_r
-      + ef_total_count + perc_wom_exp + classification_name, data = basketball_m)
-
-basketball_aug_mult <- augment(basketball_mult_fit$fit)
-```
-
-```{r check-resid}
-ggplot(data = basketball_aug_mult, aes(x = .fitted, y = .resid)) + 
-  geom_point() +
-  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
-  labs(x = "Fitted values", 
-       y = "Residuals", 
-       title = "Residuals vs. fitted")
-```
-
-Constant variance is met because there is an even amount of residuals above and below the horizontal line. Linearity may not be met. We can see that there is a conglomerate of points that shape a almost negative line around the y intercept. However, there is a random scatter of points around this. This should be kept in mind and show that a linear model may not be the best regression model to use.
-
-```{r normal-res}
-ggplot(data = basketball_aug_mult, aes(x = .resid)) +
-  geom_histogram() +
-  labs(x = "Residuals", 
-       y = "Count", 
-       title = "Distribution of residuals")
-```
-
-We can see the normality condition is satisfied as the residuals are normally distributed and the sample has more than 30 observations. Independence is also satisfied because of how the data was taken. Collegiate information about one school is independent of another school.
-
 
 To avoid overfitting the data, we then split the dataset into the training and the test data, and we used cross validation using 20 folds. Then we used our recipe to fit our models. Using the models, we calculated AIC and BIC to evaluate each model fit.
 
@@ -363,6 +331,7 @@ fit <- wflow3 |>
 tidy(fit) |>
   kable(digits = 3)
 ```
+
 -   Model fit statistics
 
 ```{r metrics-final}
@@ -377,7 +346,7 @@ map_df(fit_rs3$.extracts, ~ .x[[1]][[1]]) |>
 
 The final model has a AIC of 1989.851 and a BIC of 2015.731.
 
-To see if there are interaction terms, we will be using `step_interact()`. Because we ended up reducing the model taking out the sector name variable, we decided to check if there were any interaction effects between gender ratio and percentage of women expenditure with these variables having a connection with gender. 
+To see if there are interaction terms, we will be using `step_interact()`. Because we ended up reducing the model taking out the sector name variable, we decided to check if there were any interaction effects between gender ratio and percentage of women expenditure with these variables having a connection with gender.
 
 ```{r}
 
@@ -405,7 +374,39 @@ tidy(fit_int) |>
   kable(digits = 3)
 
 ```
-Because the p value for `gender_r:perc_wom_exp` is about 0.56, we can conclude that there are no interaction effects between the two variables. 
+
+Because the p value for `gender_r:perc_wom_exp` is about 0.56, we can conclude that there are no interaction effects between the two variables.
+
+*Checking Model Conditions:*
+
+```{r mult_fit}
+basketball_mult_fit <- linear_reg() |>
+  set_engine("lm") |>
+  fit(profit ~ total_partc + gender_r + ef_total_count + perc_wom_exp, data = basketball_m)
+
+basketball_aug_mult <- augment(basketball_mult_fit$fit)
+```
+
+```{r check-resid}
+ggplot(data = basketball_aug_mult, aes(x = .fitted, y = .resid)) + 
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Fitted values", 
+       y = "Residuals", 
+       title = "Residuals vs. fitted")
+```
+
+Constant variance is met because there is an even amount of residuals above and below the horizontal line. Linearity may not be met. We can see that there is a conglomerate of points that shape a almost negative line around the y intercept. However, there is a random scatter of points around this. This should be kept in mind and show that a linear model may not be the best regression model to use.
+
+```{r normal-res}
+ggplot(data = basketball_aug_mult, aes(x = .resid)) +
+  geom_histogram() +
+  labs(x = "Residuals", 
+       y = "Count", 
+       title = "Distribution of residuals")
+```
+
+We can see the normality condition is satisfied as the residuals are normally distributed and the sample has more than 30 observations. Independence is also satisfied because of how the data was taken. Collegiate information about one school is independent of another school.
 
 #### Results
 
@@ -435,11 +436,9 @@ rmse(test_pred, truth = profit, estimate = .pred)
 
 The RMSE for the training data which is 1.077032 while the RMSE for testing data is 0.7771352. Since we have a reasonably small difference in the RMSE, there is no apparent sign of model overfit. The model can generalize to new data.
 
-
-
 **Discussion + Conclusion**
 
-Looking at each predictor's p values, the most significant predictor is total count of students with a p-value smaller than 0.05 where we can reject the null hypothesis that total count of students has no significant effect to profit. In terms of the coefficient of total count of students, we can give the following interpretation. For each hundred increase in the total count of students, the school's basketball profit is expected to increase by 0.002 million dollars. Furthermore, when comparing the AIC and BIC of multiple models to predict profit, we concluded that the best model to fit the data was the model that includes total participation rate, total student count, gender ratio, and percentage of women expenditure. Checking to see if there were any interaction terms between `gender_r` and `perc_wom_exp`by using `step_recipe()`, we concluded that there are no potential interaction effects. 
+Looking at each predictor's p values, the most significant predictor is total count of students with a p-value smaller than 0.05 where we can reject the null hypothesis that total count of students has no significant effect to profit. In terms of the coefficient of total count of students, we can give the following interpretation. For each hundred increase in the total count of students, the school's basketball profit is expected to increase by 0.002 million dollars. Furthermore, when comparing the AIC and BIC of multiple models to predict profit, we concluded that the best model to fit the data was the model that includes total participation rate, total student count, gender ratio, and percentage of women expenditure. Checking to see if there were any interaction terms between `gender_r` and `perc_wom_exp`by using `step_recipe()`, we concluded that there are no potential interaction effects.
 
 While our study provides a comprehensive analysis of the factors influencing profit in collegiate basketball, there is room for improvement. One of the limitations of our research was that there may be more predictors outside the scope of our dataset that influences the profit of collegiate basketball. Also, the school year 2019-2020 was mainly when COVID 19 affected many schools and especially sports activities. We anticipate that the data collected during this timeline may not be applicable for other years without COVID.
 
