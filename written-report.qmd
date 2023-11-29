@@ -3,6 +3,8 @@ title: "College's predicted profit by sport"
 author: "Standard Deviants - Ava Exelbirt, Yura Heo, Claire Li"
 date: "11/7/2023"
 format: pdf
+geometry: margin=2cm
+margin-top: margin = 0cm
 execute: 
   warning: false
   message: false
@@ -97,7 +99,8 @@ profit_eda <- basketball |>
   skim(profit) |>
   select(-skim_type, -skim_variable, -complete_rate,
          - numeric.hist) |>
-  print(width = Inf) 
+  print(width = Inf) |>
+  kable(digits = 3)
 
 ```
 
@@ -148,7 +151,8 @@ cat_statistics <- function(x) {
   return(OUT)
 }
 
-cat_statistics(basketball$sector_name)
+cat_statistics(basketball$sector_name) |>
+  kable(digits = 3)
 
 ```
 
@@ -191,7 +195,7 @@ Looking at the participation rate graphs, there seems to be slightly more partic
 
 **A potential interaction effect between total number of student and type of school**
 
-```{r interact, echo = FALSE, fig.width = 7}
+```{r interact, echo = FALSE, fig.width = 6, fig.height = 3}
 basketball |>
   ggplot(aes(x = ef_total_count, y = profit, color = sector_name)) +
   geom_point() +
@@ -218,7 +222,7 @@ For the predictors, we anticipate that **participation rate** will be a key pred
 
 Additionally, we anticipate interaction effects which we will do further analysis in our results. Specifically, we believe the participation rate and the school sector type will have a correlation. This is because we expect the participation rate to be very dependent on the levels of investment, competitive levels, institutional culture, and student demographics which vary based on the type of institution(sectorname). 
 
-We first check the model's comditions.
+We first check the model's conditions.
 
 ```{r clean-data}
 basketball_m <- basketball |>
@@ -237,30 +241,27 @@ basketball_mult_fit <- linear_reg() |>
 basketball_aug_mult <- augment(basketball_mult_fit$fit)
 ```
 
-```{r check-resid}
-ggplot(data = basketball_aug_mult, aes(x = .fitted, y = .resid)) + 
+```{r normal-res, fig.width = 6, fig.height = 3}
+res1 <- ggplot(data = basketball_aug_mult, aes(x = .fitted, y = .resid)) + 
   geom_point() +
   geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
   labs(x = "Fitted values", 
        y = "Residuals", 
        title = "Residuals vs. fitted")
-```
 
-Constant variance is met because there is an even amount of residuals above and below the horizontal line. Linearity may not be met. We can see that there is a conglomerate of points that shape a almost negative line around the y intercept. However, there is a random scatter of points around this. This should be kept in mind and show that a linear model may not be the best regression model to use.
-
-```{r normal-res}
-ggplot(data = basketball_aug_mult, aes(x = .resid)) +
+res2 <- ggplot(data = basketball_aug_mult, aes(x = .resid)) +
   geom_histogram() +
   labs(x = "Residuals", 
        y = "Count", 
        title = "Distribution of residuals")
+res1 + res2
 ```
 
-We can see the normality condition is satisfied as the residuals are normally distributed and the sample has more than 30 observations. Independence is also satisfied because of how the data was taken. Collegiate information about one school is independent of another school.
+Linearity is not quiet met as there seems to be a negative linear relationship between the residuals and fitted values as there is a conglomerate around the y intercept. There does not seem to be such a random scatter of points. Constant variance is met because there is an even amount of residuals above and below the horizontal line. The normality condition is satisfied as the residuals are normally distributed and the sample has more than 30 observations. Independence is also satisfied because of how the data was taken. Collegiate information about one school is independent of another school.
 
 Since the linearity is not satisfied, we log transformed the response variable `profit`.
 
-```{r}
+```{r make-log}
 basketball_m <- basketball_m |>
   mutate(log_profit = case_when(
     sign(profit) == 1 ~ log(profit),
@@ -269,7 +270,7 @@ basketball_m <- basketball_m |>
 
 ```
 
-```{r}
+```{r log-conditions, fig.width = 6, fig.height = 3}
 basketball_mult_fit_log <- linear_reg() |>
   set_engine("lm") |>
   fit(log_profit ~ total_partc + sector_name + gender_r
@@ -283,6 +284,8 @@ ggplot(data = basketball_aug_mult_log, aes(x = .fitted, y = .resid)) +
        y = "Residuals", 
        title = "Residuals vs. fitted")
 ```
+
+Now we can see the residuals vs. fitted values show a random scatter and linearity is satisfied.
 
 To avoid overfitting the data, we then split the dataset into the training and the test data, and we used cross validation using 20 folds. Then we used our recipe to fit our models. Using the models, we calculated AIC and BIC to evaluate each model fit.
 
@@ -323,12 +326,14 @@ fit_rs1 <- wflow1 |>
 ```
 
 ```{r AIC-BIC}
-collect_metrics(fit_rs1, summarize = TRUE)
+collect_metrics(fit_rs1, summarize = TRUE) |>
+  kable(digits =3)
 
 map_df(fit_rs1$.extracts, ~ .x[[1]][[1]]) |> 
   summarise(mean_adj_rsq = mean(adj.r.squared), 
             mean_aic = mean(AIC), 
-            mean_bic = mean(BIC))
+            mean_bic = mean(BIC))|>
+  kable(digits =3)
 
 ```
 
@@ -353,12 +358,14 @@ fit_rs2 <- wflow2 |>
 ```
 
 ```{r metric-two}
-collect_metrics(fit_rs2, summarize = TRUE)
+collect_metrics(fit_rs2, summarize = TRUE) |>
+  kable(digits =3)
 
 map_df(fit_rs2$.extracts, ~ .x[[1]][[1]]) |> 
   summarise(mean_adj_rsq = mean(adj.r.squared), 
             mean_aic = mean(AIC), 
-            mean_bic = mean(BIC))
+            mean_bic = mean(BIC)) |>
+  kable(digits =3)
 
 ```
 
@@ -393,51 +400,24 @@ tidy(fit) |>
 -   Model fit statistics
 
 ```{r metrics-final}
-collect_metrics(fit_rs3, summarize = TRUE)
+collect_metrics(fit_rs3, summarize = TRUE) |>
+  kable(digits = 3)
 
 map_df(fit_rs3$.extracts, ~ .x[[1]][[1]]) |> 
   summarise(mean_adj_rsq = mean(adj.r.squared), 
             mean_aic = mean(AIC), 
-            mean_bic = mean(BIC))
+            mean_bic = mean(BIC)) |>
+  kable(digits = 3)
 
 ```
 
 The final model has a AIC of 3446.948 and a BIC of 3473.352.
 
-#### Results
-
-Our initial model including total participation rate, school sector name, gender ratio, total student count, classification name, and percentage of women expenditure has a AIC of 3443.95 and a BIC of 3545.167. When we reduce the sector name variable, the AIC decreases to 3443.531 and the BIC decreases to 3527.144. We choose our final model that further reduce the classification name variable since it has the lowest AIC and BIC. We decide not to further reduce the terms in the model to have sufficient predictor variables for the response variable.
-
--   Model diagnostics
-
-```{r vif}
-fit <- extract_fit_parsnip(fit)
-
-vif(fit$fit)
-```
-
-There is no variable with $VIF > 10$ that indicates concerning multicollinearity, so no apparent issue with multicollinearity is found.
-
-```{r find-rmse}
-train_pred <- predict(fit, train) |>
-  bind_cols(train)
-
-rmse(train_pred, truth = profit, estimate = .pred)
-
-test_pred <- predict(fit, test) |>
-  bind_cols(test)
-
-rmse(test_pred, truth = profit, estimate = .pred)
-```
-
-The RMSE for the training data which is 5.111739 while the RMSE for testing data is 5.056632. Since we have a reasonably small difference in the RMSE, there is no apparent sign of model overfit. The model can generalize to new data.
-
 -   Interaction Terms
 
 To see if there are interaction terms, we will be using `step_interact()`. Because we ended up reducing the model taking out the sector name variable, we decided to check if there were any interaction effects between gender ratio and percentage of women expenditure with these variables having a connection with gender.
 
-```{r}
-
+```{r check-interact}
 rec3_int <-  recipe(log_profit ~ total_partc + ef_total_count + gender_r + perc_wom_exp, 
                     data = train) |>
   step_naomit() |>
@@ -464,6 +444,47 @@ tidy(fit_int) |>
 ```
 
 Because the p value for `gender_r:perc_wom_exp` is about 0.703, we can conclude that there are no significant interaction effects between the two variables.
+
+#### Results
+
+Our initial model including total participation rate, school sector name, gender ratio, total student count, classification name, and percentage of women expenditure has a AIC of 3443.95 and a BIC of 3545.167. When we reduce the sector name variable, the AIC decreases to 3443.531 and the BIC decreases to 3527.144. We choose our final model that further reduce the classification name variable since it has the lowest AIC and BIC. We decide not to further reduce the terms in the model to have sufficient predictor variables for the response variable.
+
+-   Model diagnostics
+
+```{r vif}
+fit <- extract_fit_parsnip(fit)
+
+vif(fit$fit)
+```
+
+There is no variable with $VIF > 10$ that indicates concerning multicollinearity, so no apparent issue with multicollinearity is found.
+
+```{r find-rmse}
+train_pred <- predict(fit, train) |>
+  bind_cols(train)
+
+r1<- rmse(train_pred, truth = profit, estimate = .pred)
+
+test_pred <- predict(fit, test) |>
+  bind_cols(test)
+
+r2<- rmse(test_pred, truth = profit, estimate = .pred)
+knitr::kable(list(r1, r2))
+```
+
+The RMSE for the training data which is 5.111739 while the RMSE for testing data is 5.056632. Since we have a reasonably small difference in the RMSE, there is no apparent sign of model overfit. The model can generalize to new data.
+
+So, our final model is one that includes total participation rate, total count of students, gender ratio, and percentage of women expenditure to predict the log of profit.
+
+\begin{align*}
+\hat{log\_profit} = -2.619 + 0.065*total\_participation + 0.006*total\_student\_count - \\ 0.363*gender\_ratio -7.178*percent\_women's\_expenditure
+\end{align*}
+
+Regarding our hypothesis, our final model shows that two of our hypothesized variables are influential predictors on a school's collegiate sport basketball profit. These include participation rate and gender ratio. We hypothesizes that sector name would bve a significant predictor, which we can reject by looking at the model. To answer our research question, we can predict profit in USD of the collegiate sport basketball for schools in the year 2019-2020 with predictors of student participation rate, total student count, gender ratio which is the male population count divided by female population count, and the percent of a school's expenditures that are spent towards women's sports.
+
+Looking at the predictors that we hypothesized would be influential, we can conclude that for every one percent increase in a school's sport's participation rate, we expect on average that the school's profit from basketball in the year 2019-2020 will increase by a factor of 1.067 ( $e^{0.065}$ ). For every one 1 point increase in the ratio of male population divided by female population, we expect on average that the school's profit from basketball in the year 2019-2020 will increase by a factor of 1.438 ($e^{0.363}$).
+
+Looking at the predictors that we did not hypothesize would be influential, we can conclude that for every one percent increase in a school's expenditures that goes towards women's sports, we expect on average that the school's profit from basketball in the year 2019-2020 will decrease by a factor of 0.00076 ( $e^{-7.178}$ ). For every 100 student increase in a school's population count, we expect on average that the school's profit from basketball in the year 2019-2020 will increase by a factor of 1.006 ( $e^{0.006}$ ).
 
 **Discussion + Conclusion**
 
