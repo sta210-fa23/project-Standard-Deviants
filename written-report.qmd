@@ -244,19 +244,19 @@ basketball_aug_mult <- augment(basketball_mult_fit$fit)
 ```
 
 ```{r normal-res, fig.width = 6, fig.height = 3}
-res1 <- ggplot(data = basketball_aug_mult, aes(x = .fitted, y = .resid)) + 
+ggplot(data = basketball_aug_mult, aes(x = .fitted, y = .resid)) + 
   geom_point() +
   geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
   labs(x = "Fitted values", 
        y = "Residuals", 
        title = "Residuals vs. fitted")
 
-res2 <- ggplot(data = basketball_aug_mult, aes(x = .resid)) +
+ggplot(data = basketball_aug_mult, aes(x = .resid)) +
   geom_histogram() +
   labs(x = "Residuals", 
        y = "Count", 
        title = "Distribution of residuals")
-res1 + res2
+#res1 + res2
 ```
 
 Linearity is not quiet met as there seems to be a negative linear relationship between the residuals and fitted values as there is a conglomerate around the y intercept. There does not seem to be such a random scatter of points. Constant variance is met because there is a relatively even amount of residuals above and below the horizontal line. The normality condition is satisfied as the residuals are normally distributed and the sample has more than 30 observations. Independence is also satisfied because based on how the data was taken, collegiate information about one school is independent of another school.
@@ -418,6 +418,7 @@ The final model has a AIC of 3446.948 and a BIC of 3473.352.
 -   Interaction Terms
 
 To see if there are interaction terms, we will be using `step_interact()`. Because we ended up reducing the model taking out the sector name variable, we decided to check if there were any interaction effects between gender ratio and percentage of women expenditure with these variables with both variables having a relationship to gender.
+
 ```{r check-interact}
 rec3_int <-  recipe(log_profit ~ total_partc + ef_total_count + gender_r + perc_wom_exp, 
                     data = train) |>
@@ -477,10 +478,11 @@ The RMSE for the training data which is 5.111739 while the RMSE for testing data
 
 So, our final model is one that includes total participation rate, total count of students, gender ratio, and percentage of women expenditure to predict the log of profit.
 
+```{=tex}
 \begin{align*}
 \hat{log\_profit} = -2.619 + 0.065*total\_participation + 0.006*total\_student\_count - \\ 0.363*gender\_ratio -7.178*percent\_women's\_expenditure
 \end{align*}
-
+```
 Regarding our hypothesis, our final model shows that two of our hypothesized variables are influential predictors on a school's collegiate sport basketball profit. These include participation rate and gender ratio. We hypothesizes that sector name would bve a significant predictor, which we can reject by looking at the model. To answer our research question, **we can predict profit in USD of the collegiate sport basketball for schools in the year 2019-2020 with predictors of student participation rate, total student count, gender ratio which is the male population count divided by female population count, and the percent of a school's expenditures that are spent towards women's sports**.
 
 Looking at the predictors that we hypothesized would be influential, we can conclude that for every one percent increase in a school's sport's participation rate, we expect on average that the school's profit from basketball in the year 2019-2020 will increase by a factor of 1.067 ( $e^{0.065}$ ). For every one 1 point increase in the ratio of male population divided by female population, we expect on average that the school's profit from basketball in the year 2019-2020 will increase by a factor of 1.438 ($e^{0.363}$).
