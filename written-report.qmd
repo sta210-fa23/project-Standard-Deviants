@@ -93,7 +93,7 @@ profit2 <- basketball |>
 
 totalprofit <- basketball |>
   ggplot(aes(x = profit)) +
-  geom_histogram(binwidth = 10) +
+  geom_histogram(binwidth = 3) +
   labs(title = "Distribution of Profit (in million $)",
        x = "Profit (in million $)", y = "Count") +
   theme(plot.title = element_text(size = 10))
@@ -103,9 +103,9 @@ profit1 + profit2 / totalprofit
 profit_eda <- basketball |>
   skim(profit) |>
   select(-skim_type, -skim_variable, -complete_rate,
-         - numeric.hist) |>
-  print(width = Inf) |>
-  kable(digits = 3)
+         - numeric.hist)
+
+kable(profit_eda)
 
 ```
 
@@ -143,8 +143,9 @@ p_exp + p_type
 t_exp <- basketball |>
   skim(ef_total_count) |>
   select(-skim_type, -skim_variable, -complete_rate,
-         - numeric.hist) |> 
-  print(width = Inf) 
+         - numeric.hist)
+
+kable(t_exp)
 
 cat_statistics <- function(x) {
   nmiss <- sum(is.na(x))
@@ -228,7 +229,7 @@ For the predictors, we anticipate that **participation rate** will be a key pred
 
 Additionally, we anticipate interaction effects. Specifically, we believe the participation rate and the school sector type will have a correlation. This is because we expect the participation rate to be very dependent on the levels of investment, competitive levels, institutional culture, and student demographics which vary based on the type of institution(sectorname). 
 
-We first check the model's conditions.
+To avoid overfitting the data, we then split the dataset into the training and test data, and we used cross validation using 20 folds. Then we used our recipe to fit our models. Using the models, we calculated AIC and BIC to evaluate each model fit.
 
 ```{r clean-data}
 basketball_m <- basketball |>
@@ -238,6 +239,8 @@ basketball_m <- basketball |>
 ```
 
 *Checking Model Conditions:*
+
+We first checked the conditions for inference with the full model including all available predictors on the full data.
 
 ```{r mult_fit}
 basketball_mult_fit <- linear_reg() |>
@@ -292,9 +295,7 @@ ggplot(data = basketball_aug_mult_log, aes(x = .fitted, y = .resid)) +
        title = "Residuals vs. fitted")
 ```
 
-Now we can see the residuals vs. fitted values show a random scatter and linearity is satisfied.
-
-To avoid overfitting the data, we then split the dataset into the training and test data, and we used cross validation using 20 folds. Then we used our recipe to fit our models. Using the models, we calculated AIC and BIC to evaluate each model fit.
+Now we can see the residuals vs. fitted values show a random scatter and linearity is satisfied. Hence, we use `log_profit` as the response variable for fitting models.
 
 ```{r split}
 set.seed(2023)
@@ -310,8 +311,7 @@ spec <- linear_reg() |>
 
 ```
 
-To prepare the variables for our analysis, we used a recipe. First, we dropped all the NA values using `step_naomit()`. We decided to drop NA values to ensure that the values we do use are accurate. For example, the data set has observations with NA values in women's participation rate. However, when the sum participation rate for women is calculated, the data set represents this sum with 0. This 0 can skew the regression model when the true participation rate of women may not be 0. Since we are using total participation rate in our model, it is best to drop NA values. Also, considering that the data set has 775 observations after all NA's are dropped, we still have a lot of reliable data to use for modeling. Most of the school’s with missing data were school’s without a basketball team. However, there are potentially some school’s that did have a basketball team and had other NA values that got dropped. These schools are mostly public 2 year institutions. There could be potential bias when trying to generalize the model on these schools, but there are still a large amount of observations from public 2 year institutions. 
-Then, we used `step_zv()` to remove all predictors that contain only a single value. We created dummy variables using `step_dummy()` for all nominal predictors which are Classification name and Sector name. Lastly, we used `step_center()` to mean center our quantitative predictors.
+To prepare the variables for our analysis, we used a recipe. First, we dropped all the NA values using `step_naomit()`. We decided to drop NA values to ensure that the values we do use are accurate. For example, the data set has observations with NA values in women's participation rate. However, when the sum participation rate for women is calculated, the data set represents this sum with 0. This 0 can skew the regression model when the true participation rate of women may not be 0. Since we are using total participation rate in our model, it is best to drop NA values. Also, considering that the data set has 775 observations after all NA's are dropped, we still have a lot of reliable data to use for modeling. Most of the school's with missing data were school's without a basketball team. However, there are potentially some school's that did have a basketball team and had other NA values that got dropped. These schools are mostly public 2 year institutions. There could be potential bias when trying to generalize the model on these schools, but there are still a large amount of observations from public 2 year institutions. Then, we used `step_zv()` to remove all predictors that contain only a single value. We created dummy variables using `step_dummy()` for all nominal predictors which are Classification name and Sector name. Lastly, we used `step_center()` to mean center our quantitative predictors.
 
 ```{r recipe}
 rec1 <- recipe(log_profit ~ total_partc + sector_name + gender_r
@@ -504,6 +504,6 @@ Furthermore, when comparing the AIC and BIC of multiple models to predict profit
 
 While our study provides a comprehensive analysis of the factors influencing profit in collegiate basketball, there is room for improvement. One of the limitations of our research was that there may be more predictors outside the scope of our dataset that influences the profit of collegiate basketball. We chose the school year 2019 for our analysis because it was the most recent available data in the database, which we believed reflects the latest conditions and trends in collegiate basketball. However, towards the end of the 2019 school year was when COVID 19 began to affect many schools, especially sports activities. Considering that basketball season is generally from November-March, COVID may have had an effect towards the end of basketball season. We acknowledge that the data collected during this timeline may not be applicable for other years without COVID, influencing factors such as participation rates, revenue, and expenditure in collegiate basketball. We can further anticipate that these factors may decrease during COVID because the pandemic likely introduced restrictions on gatherings and financial constraints on institutions.
 
-Lastly, the schools with missing data were those that did not have basketball teams. Since we are predicting profit from collegiate basketball, these schools are not in our population of interest and therefore should be removed. Potential limitations would be that we lose the data about which schools do not have a basketball team. However, looking at our data set the school’s without a basketball team are mostly public 2-year institutions. One potential limitation would be that there are less observations about public 2-year institutions to generalize the data on these types of schools, but our filtered data set still does include a large amount of observations from these schools. 
+Lastly, the schools with missing data were those that did not have basketball teams. Since we are predicting profit from collegiate basketball, these schools are not in our population of interest and therefore should be removed. Potential limitations would be that we lose the data about which schools do not have a basketball team. However, looking at our data set the school's without a basketball team are mostly public 2-year institutions. One potential limitation would be that there are less observations about public 2-year institutions to generalize the data on these types of schools, but our filtered data set still does include a large amount of observations from these schools.
 
 In conclusion, we anticipate that the implications of our research predicting profit generation in collegiate basketball holds profound meaning in multiple domains such as in academia, sports management, and educational governance to foster an environment conducive to the holistic development of student-athletes. As a future direction, we would like to not just look at trends from the 2019 school year, but delve into longitudinal trends within collegiate basketball profitability by analyzing data spanning multiple seasons. Furthermore, we could extend the scope of our model to also predict profit from different collegiate sports, like baseball or football. We would also like to further our study by incorporating external factors that may influence profitability such as global events and changes in sports culture to get a nuanced perspective of our predictive model.
