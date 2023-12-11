@@ -1,10 +1,11 @@
 ---
-title: "College's predicted profit by sport"
+title: "College's Predicted Basketball Profit"
 author: "Standard Deviants - Ava Exelbirt, Yura Heo, Claire Li"
 date: "11/7/2023"
 format: pdf
 geometry: margin=2cm
 margin-top: margin = 0cm
+fontsize: 10pt
 execute: 
   warning: false
   message: false
@@ -395,6 +396,19 @@ fit_rs3 <- wflow3 |>
 
 ```
 
+```{r metrics-final}
+collect_metrics(fit_rs3, summarize = TRUE) |>
+  kable(digits = 3)
+
+map_df(fit_rs3$.extracts, ~ .x[[1]][[1]]) |> 
+  summarise(mean_adj_rsq = mean(adj.r.squared), 
+            mean_aic = mean(AIC), 
+            mean_bic = mean(BIC)) |>
+  kable(digits = 3)
+```
+
+Looking at the results of the AIC, BIC, and adjusted $R^{2}$ values of all 3 models, we can see that each model has very similar values. Therefore, aiming for a parsimonious model, we will choose the third model.
+
 Our final model uses the predictor of **total participation rate, total count of students, gender ratio, and percentage of women expenditure**.
 
 ```{r fit-model}
@@ -407,19 +421,13 @@ tidy(fit) |>
 
 -   Model fit statistics
 
-```{r metrics-final}
-collect_metrics(fit_rs3, summarize = TRUE) |>
-  kable(digits = 3)
-
-map_df(fit_rs3$.extracts, ~ .x[[1]][[1]]) |> 
-  summarise(mean_adj_rsq = mean(adj.r.squared), 
-            mean_aic = mean(AIC), 
-            mean_bic = mean(BIC)) |>
-  kable(digits = 3)
-
+```{r stat-final}
+glance(fit)$AIC
+glance(fit)$BIC
+glance(fit)$adj.r.squared
 ```
 
-The final model has a AIC of 3446.948 and a BIC of 3473.352.
+The final model has a AIC of 3627.979, a BIC of 3654.691, and an adjusted $R^{2}$ of about 0.047.
 
 -   Interaction Terms
 
@@ -455,7 +463,7 @@ Because the p value for `gender_r:perc_wom_exp` is about 0.703, we fail to rejec
 
 #### Results
 
-Our initial model including total participation rate, school sector name, gender ratio, total student count, classification name, and percentage of women expenditure has a AIC of 3443.95 and a BIC of 3545.167. When we reduce the sector name variable, the AIC decreases to 3443.531 and the BIC decreases to 3527.144. In accordance to parcimony, we choose our final model that further reduce the model by taking out the classification name variable since it has the lowest AIC and BIC. We decide not to further reduce the terms in the model to have sufficient predictor variables for the response variable.
+Our initial model including total participation rate, school sector name, gender ratio, total student count, classification name, and percentage of women expenditure has a AIC of 3443.95 and a BIC of 3545.167. When we reduce the sector name variable, the AIC decreases to 3443.531 and the BIC decreases to 3527.144. In accordance to parsimony, we choose our final model that further reduce the model by taking out the classification name variable since it has the lowest AIC and BIC. We decide not to further reduce the terms in the model to have sufficient predictor variables for the response variable.
 
 -   Model diagnostics
 
@@ -473,15 +481,18 @@ train_pred <- predict(fit, train) |>
   bind_cols(train)
 
 r1<- rmse(train_pred, truth = profit, estimate = .pred)
+r21<- rsq(train_pred, truth = profit, estimate = .pred)
 
 test_pred <- predict(fit, test) |>
   bind_cols(test)
 
 r2<- rmse(test_pred, truth = profit, estimate = .pred)
+r22<- rsq(test_pred, truth = profit, estimate = .pred)
 knitr::kable(list(r1, r2))
+knitr::kable(list(r21, r22))
 ```
 
-The RMSE for the training data which is 5.111739 while the RMSE for testing data is 5.056632. Since we have a reasonably small difference in the RMSE, there is no apparent sign of model overfit. The model can generalize to new data.
+The RMSE for the training data predicting log-profit is about 5.112, which means that the RMSE for profit would be about \$166 million ($e^{5.112}$ ). The RMSE for testing data is about 5.057, meaning that the RMSE for profit on the testing data is about \$157 million ($e^{5.057}$ ). While there is a slight overfit of about \$9 million, considering that the range of the data is in the hundreds of millions of USD, this is not a jarring sign that the model overfits the data. Therefore, we can reasonably conclude that the model can be generalized to new data. However, looking at the RMSE and $R^{2}$ of the training data, we may not conclude that this model performs well. We can see that there is a very small $R^{2}$ for the model showing that only about 1.85% of the variability in the profit can be explained by total participation rate, total count of students, gender ratio, and percentage of women expenditure.
 
 So, our final model is one that includes total participation rate, total count of students, gender ratio, and percentage of women expenditure to predict the log of profit.
 
@@ -501,6 +512,8 @@ Looking at the predictors that we did not hypothesize would be influential, we c
 Looking at each predictor's p values, the three significant predictors are total participation rate, total count of students, and percentage of women participation, each with a p-value smaller than 0.05 where we can reject the null hypothesis that the predictor has no significant effect to log-transformed profit.
 
 Furthermore, when comparing the AIC and BIC of multiple models to predict profit, we concluded that the best model to fit the data was the model that includes total participation rate, total student count, gender ratio, and percentage of women expenditure. Checking to see if there were any interaction terms between `gender_r` and `perc_wom_exp`by using `step_recipe()`, we concluded that there are no potential interaction effects.
+
+Regarding the model performance, since it has a fairly low r-square of 0.0185 and high rmse of \$166 million, our model does not generate very accurate predictions of collegiate basketball profits. As of the complexities of sports profits and the amount of variability such as school reputation and celebrity effect not simply accountable by statistics, it is fair that our model only explains a small amount of variability in the data.
 
 While our study provides a comprehensive analysis of the factors influencing profit in collegiate basketball, there is room for improvement. One of the limitations of our research was that there may be more predictors outside the scope of our dataset that influences the profit of collegiate basketball. We chose the school year 2019 for our analysis because it was the most recent available data in the database, which we believed reflects the latest conditions and trends in collegiate basketball. However, towards the end of the 2019 school year was when COVID 19 began to affect many schools, especially sports activities. Considering that basketball season is generally from November-March, COVID may have had an effect towards the end of basketball season. We acknowledge that the data collected during this timeline may not be applicable for other years without COVID, influencing factors such as participation rates, revenue, and expenditure in collegiate basketball. We can further anticipate that these factors may decrease during COVID because the pandemic likely introduced restrictions on gatherings and financial constraints on institutions.
 
