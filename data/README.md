@@ -9,7 +9,7 @@ The codebook for your data file(s) using the following format.
 ## sports.csv
 
 | Variable             | Description                                                  |
-|:----------------------|:------------------------------------------------|
+|:----------------------|:-----------------------------------------------|
 | year                 | year, like 2019                                              |
 | unitid               | School ID                                                    |
 | instituion_name      | School name                                                  |
@@ -40,3 +40,4 @@ The codebook for your data file(s) using the following format.
 | sports               | Sport name                                                   |
 | gender_r             | Amount of male population divided by female population       |
 | perc_wom_exp         | Percent of expenditured that goes towards women's basketball |
+| profit               | A school's revenue minus expenditures                        |
