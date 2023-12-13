@@ -166,7 +166,7 @@ There are 5 types of schools. Private for-profit, 2-year and private nonprofit, 
 
 **Relationship between Profit and a Categorical and Quantitative Predictor**
 
-```{r profit-vs-part, echo = FALSE, fig.width = 7, fig.height = 3}
+```{r profit-vs-part, echo = FALSE, fig.width = 7, fig.height = 2}
 basketball |>
   ggplot(aes(x = sector_name, y = profit)) +
   geom_boxplot() +
@@ -198,7 +198,7 @@ Looking at the participation rate plots, there seems to be slightly more partici
 
 **A potential interaction effect between total number of student and type of school**
 
-```{r interact, echo = FALSE, fig.width = 6, fig.height = 3}
+```{r interact, echo = FALSE, fig.width = 6, fig.height = 2}
 basketball |>
   ggplot(aes(x = ef_total_count, y = profit, color = sector_name)) +
   geom_point() +
@@ -244,7 +244,7 @@ basketball_mult_fit <- linear_reg() |>
 basketball_aug_mult <- augment(basketball_mult_fit$fit)
 ```
 
-```{r normal-res, fig.width = 6, fig.height = 3}
+```{r normal-res, fig.width = 6, fig.height = 2}
 res1 <- ggplot(data = basketball_aug_mult, aes(x = .fitted, y = .resid)) + 
   geom_point() +
   geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
@@ -269,7 +269,7 @@ basketball_m <- basketball_m |>
 
 ```
 
-```{r log-conditions, fig.width = 6, fig.height = 3}
+```{r log-conditions, fig.width = 6, fig.height = 2}
 basketball_mult_fit_log <- linear_reg() |>
   set_engine("lm") |>
   fit(log_profit ~ total_partc + sector_name + gender_r
