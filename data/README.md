@@ -9,7 +9,7 @@ The codebook for your data file(s) using the following format.
 ## sports.csv
 
 | Variable             | Description                                                  |
-|:----------------------|:-----------------------------------------------|
+|:---------------------|:-------------------------------------------------------------|
 | year                 | year, like 2019                                              |
 | unitid               | School ID                                                    |
 | instituion_name      | School name                                                  |
