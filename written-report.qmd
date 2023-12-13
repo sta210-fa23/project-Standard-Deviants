@@ -103,7 +103,8 @@ profit_eda <- basketball |>
   select(-skim_type, -skim_variable, -complete_rate,
          - numeric.hist)
 
-kable(profit_eda)
+kable(profit_eda) |>
+  kable_styling(font_size = 8)
 
 ```
 
@@ -111,7 +112,7 @@ The distribution of profit is approximately normally distributed with a slight r
 
 **Distributions of total amount of students (potential quantitative predictor variable) and type of school (potential categorical predictor variable)**
 
-```{r pred-dist, echo = FALSE, fig.width = 7, fig.height = 3}
+```{r pred-dist, echo = FALSE, fig.height = 3}
 p_exp <- basketball |>
   ggplot(aes(x = ef_total_count, fill = sector_name)) +
   geom_histogram() +
@@ -123,11 +124,13 @@ p_exp <- basketball |>
        x = "Number of Students (in hundreds)", 
        y = "Count", 
        fill = "School Type") +
-  theme(plot.title = element_text(size = 10)) + 
+  theme(plot.title = element_text(size = 10),
+        axis.title.y = element_text(size = 8),
+        axis.title.x = element_text(size = 8)) + 
   xlim(0, 450)
 
 p_type <- basketball |>
-  ggplot(aes(x = str_wrap(sector_name, width = 10))) +
+  ggplot(aes(x = str_wrap(sector_name))) +
   geom_bar() +
   labs(title = "Distribution of Types \n of School",
        x = "Types of school", y = "Count") + 
@@ -143,7 +146,8 @@ t_exp <- basketball |>
   select(-skim_type, -skim_variable, -complete_rate,
          - numeric.hist)
 
-kable(t_exp)
+kable(t_exp) |>
+  kable_styling(font_size = 8)
 
 cat_statistics <- function(x) {
   nmiss <- sum(is.na(x))
@@ -166,14 +170,16 @@ There are 5 types of schools. Private for-profit, 2-year and private nonprofit, 
 
 **Relationship between Profit and a Categorical and Quantitative Predictor**
 
-```{r profit-vs-part, echo = FALSE, fig.width = 7, fig.height = 2}
+```{r profit-vs-part, echo = FALSE, fig.height = 2}
 basketball |>
   ggplot(aes(x = sector_name, y = profit)) +
   geom_boxplot() +
   labs(title = "Profit vs. Type of School",
        x = "Type of School", 
        y = "Profit (in million $)") +
-  theme(plot.title = element_text(size = 10)) +
+  theme(plot.title = element_text(size = 10),
+        axis.title.y = element_text(size = 8), 
+        axis.title.x = element_text(size = 8)) +
   coord_flip()
 
 basketball |>
@@ -181,14 +187,16 @@ basketball |>
   geom_point() +
   labs(title = "Profit vs. Men's Participation \n Rate and Classification Name",
   x = "Men's Participation Rate (%)", y = "Profit (in million $)") +
-   theme(plot.title = element_text(size = 10))
+   theme(plot.title = element_text(size = 10),
+         legend.text = element_text(size = 6))
 
 basketball |>
   ggplot(aes(x = sum_partic_women, y = profit, color = classification_name)) +
   geom_point() +
   labs(title = "Profit vs. Women's Participation \n Rate and Classification Name",
   x = "Women's Participation Rate (%)", y = "Profit (in million $)") +
-   theme(plot.title = element_text(size = 10))
+   theme(plot.title = element_text(size = 10),
+         legend.text = element_text(size = 6))
 
 ```
 
@@ -198,7 +206,7 @@ Looking at the participation rate plots, there seems to be slightly more partici
 
 **A potential interaction effect between total number of student and type of school**
 
-```{r interact, echo = FALSE, fig.width = 6, fig.height = 2}
+```{r interact, echo = FALSE, fig.height = 2}
 basketball |>
   ggplot(aes(x = ef_total_count, y = profit, color = sector_name)) +
   geom_point() +
@@ -209,7 +217,8 @@ basketball |>
        y = "Total profit (in million $)") + 
    theme(plot.title = element_text(size = 10), 
          axis.title.y = element_text(size = 8), 
-         axis.title.x = element_text(size = 8))
+         axis.title.x = element_text(size = 8),
+         legend.text = element_text(size = 6))
 ```
 
 The lines are not parallel indicating there is an interaction effect. The slope of total number of student differs based on the type of school.
@@ -269,7 +278,7 @@ basketball_m <- basketball_m |>
 
 ```
 
-```{r log-conditions, fig.width = 6, fig.height = 2}
+```{r log-conditions}
 basketball_mult_fit_log <- linear_reg() |>
   set_engine("lm") |>
   fit(log_profit ~ total_partc + sector_name + gender_r
@@ -498,7 +507,7 @@ Interestingly, while the effect of gender ratio is not significant with a p-valu
 
 **Discussion + Conclusion**
 
-Our research concludes that the major three significant predictors of collegiate basketball profits are total participation rate, total count of students, and percentage of women participation.
+Our research concludes that the major three significant predictors of collegiate basketball profits are total participation rate, total count of students, and percentage of women expenditure.
 
 There were some limitations. Regarding the model performance, since it has a fairly low $R^{2}$ of 0.0185 and high rmse of \$166 million, our model does not generate very accurate predictions of collegiate basketball profits. As of the complexities of sports profits and the amount of variability such as school reputation and celebrity effect not simply accountable by statistics, it is fair that our model only explains a small amount of variability in the data. Also, there may be more predictors outside the scope of our dataset that influence the profit of collegiate basketball. We chose the school year 2019 for our analysis because it was the most recent available data in the database, which we believed reflects the latest conditions and trends in collegiate basketball. However, towards the end of the 2019 school year was when COVID 19 may have had an effect towards the end of the basketball season generally from November-March. We acknowledge that the data collected during this timeline may not be applicable for other years without COVID, influencing factors such as participation rates, revenue, and expenditure in collegiate basketball, and further anticipate that these factors may decrease during COVID because the pandemic likely introduced restrictions on gatherings and financial constraints on institutions. Lastly, the schools with missing data were those that did not have basketball teams. Since we are predicting profit from collegiate basketball, these schools are not in our population of interest and therefore should be removed. Potential limitations would be that we lose the data about which schools do not have a basketball team. However, looking at our data set the school's without a basketball team are mostly public 2-year institutions. There are less observations about public 2-year institutions to generalize the data on these types of schools, but our filtered data set still does include a large amount of observations from these schools.
 
