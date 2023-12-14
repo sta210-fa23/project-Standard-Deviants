@@ -78,7 +78,9 @@ basketball <- sports |>
   scale_x_log10() +
   labs(title = "Distribution of Positive Profit \n (in log million $)",
        x = "Log 10 of the Positive Profits", y = "Count") +
-  theme(plot.title = element_text(size = 10))
+  theme(plot.title = element_text(size = 10),
+        axis.title.y = element_text(size = 8), 
+        axis.title.x = element_text(size = 8))
 
 profit2 <- basketball |>
   filter(profit < 0) |>
@@ -87,26 +89,34 @@ profit2 <- basketball |>
   scale_x_log10() +
   labs(title = "Distribution of Profit Losses \n (in log million $)",
        x = "Log 10 of the Negative Profits", y = "Count") +
-  theme(plot.title = element_text(size = 10))
+  theme(plot.title = element_text(size = 10),
+        axis.title.y = element_text(size = 8), 
+        axis.title.x = element_text(size = 8))
 
 totalprofit <- basketball |>
   ggplot(aes(x = profit)) +
   geom_histogram(binwidth = 3) +
   labs(title = "Distribution of Profit (in million $)",
        x = "Profit (in million $)", y = "Count") +
-  theme(plot.title = element_text(size = 10))
+  theme(plot.title = element_text(size = 10),
+        axis.title.y = element_text(size = 8), 
+        axis.title.x = element_text(size = 8))
 
 profit1 + profit2 / totalprofit
+```
 
+\tiny
+
+```{r}
 profit_eda <- basketball |>
   skim(profit) |>
   select(-skim_type, -skim_variable, -complete_rate,
          - numeric.hist)
 
-kable(profit_eda) |>
-  kable_styling(font_size = 8)
-
+kable(profit_eda)
 ```
+
+\normalsize
 
 The distribution of profit is approximately normally distributed with a slight right skew. However, many observations centered around 0\$ in profit. The median of the data is at 0\$, and the mean is about 0.027 million USD. Since the response is approximately normal, we can use the mean as the center of the data. The range is from -9.6738 million USD to 16.8938 million USD. We also split the distribution into positive and negative profits and took the log of the x axis to see a more detailed distribution. It seems that positive profits are normally distributed while negative profits are left skewed. There are 57 missing values of profit.
 
@@ -132,25 +142,31 @@ p_exp <- basketball |>
 p_type <- basketball |>
   ggplot(aes(x = str_wrap(sector_name))) +
   geom_bar() +
-  labs(title = "Distribution of Types \n of School",
+  labs(title = "Distribution of Types \nof School",
        x = "Types of school", y = "Count") + 
    theme(plot.title = element_text(size = 10), 
-         axis.text.y = element_text(size = 5), 
+         axis.title.y = element_text(size = 8), 
          axis.title.x = element_text(size = 8),
+         axis.text.y = element_text(size = 5), 
          axis.text.x = element_text(angle = 50, size = 3)) +
   scale_x_discrete(labels = function(x) gsub("(.{18})", "\\1\n", x, perl = TRUE))
         
 
 p_exp + p_type
+```
 
+\tiny
+
+```{r}
 t_exp <- basketball |>
   skim(ef_total_count) |>
   select(-skim_type, -skim_variable, -complete_rate,
          - numeric.hist)
 
-kable(t_exp) |>
-  kable_styling(font_size = 8)
+kable(t_exp)
 ```
+
+\normalsize
 
 The distribution of total amount of students is right-skewed with most of the amount of student values in the lower range, while a number of observations have very high values that make them outliers. Given the apparent skewness, the center is the median of 2,005.5 students. Since the distribution is skewed, the IQR is used as a more reliable measure of spread which is Q3 - Q1 = 4,633 - 1,060.25 = 3,572.75 students. You can also see that most of the schools with very high number of students are public, 4 year or above colleges.
 
@@ -305,6 +321,7 @@ spec <- linear_reg() |>
 
 To prepare the variables for our analysis, we used a recipe. First, we dropped all the NA values using `step_naomit()` to ensure that the values we do use are accurate. For example, the data set has observations with NA values in women's participation rate. However, when the sum participation rate for women is calculated, the data set represents this sum with 0. This 0 can skew the regression model when the true participation rate of women may not be 0. Since we are using total participation rate in our model, it is best to drop NA values. Also, considering that the data set has 775 observations after all NA's are dropped, we still have a lot of reliable data to use for modeling. Most of the school's with missing data were school's without a basketball team. However, there are potentially some school's that did have a basketball team and had other NA values that got dropped that we will analyze more in discussion section. Then, we used `step_zv()` to remove all predictors that contain only a single value. We created dummy variables using `step_dummy()` for all nominal predictors which are Classification name and Sector name. Lastly, we used `step_center()` to mean center our quantitative predictors.
 
+
 ```{r recipe}
 rec1 <- recipe(log_profit ~ total_partc + sector_name + gender_r
                 + ef_total_count + classification_name + perc_wom_exp, 
@@ -326,16 +343,11 @@ fit_rs1 <- wflow1 |>
 ```
 
 ```{r AIC-BIC}
-collect_metrics(fit_rs1, summarize = TRUE) |>
-  kable(digits =3) |>
-  kable_styling(font_size = 10)
-
 map_df(fit_rs1$.extracts, ~ .x[[1]][[1]]) |> 
   summarise(mean_adj_rsq = mean(adj.r.squared), 
             mean_aic = mean(AIC), 
             mean_bic = mean(BIC))|>
-  kable(digits =3) |>
-  kable_styling(font_size = 10)
+  kable(digits =3)
 
 ```
 
@@ -360,16 +372,11 @@ fit_rs2 <- wflow2 |>
 ```
 
 ```{r metric-two}
-collect_metrics(fit_rs2, summarize = TRUE) |>
-  kable(digits =3) |>
-  kable_styling(font_size = 10)
-
 map_df(fit_rs2$.extracts, ~ .x[[1]][[1]]) |> 
   summarise(mean_adj_rsq = mean(adj.r.squared), 
             mean_aic = mean(AIC), 
             mean_bic = mean(BIC)) |>
-  kable(digits =3) |>
-  kable_styling(font_size = 10)
+  kable(digits =3)
 
 ```
 
@@ -392,17 +399,13 @@ fit_rs3 <- wflow3 |>
 ```
 
 ```{r metrics-final}
-collect_metrics(fit_rs3, summarize = TRUE) |>
-  kable(digits = 3) |>
-  kable_styling(font_size = 10)
-
 map_df(fit_rs3$.extracts, ~ .x[[1]][[1]]) |> 
   summarise(mean_adj_rsq = mean(adj.r.squared), 
             mean_aic = mean(AIC), 
             mean_bic = mean(BIC)) |>
-  kable(digits = 3) |>
-  kable_styling(font_size = 10)
+  kable(digits = 3)
 ```
+
 
 We compute the AIC, BIC, and adjusted $R^{2}$ values of all 3 models. Aiming for a parsimonious model, we chose the third model with the least number of terms and lowest BIC.
 
@@ -422,8 +425,7 @@ tidy(fit) |>
 model_summary <- glance(fit) |> 
   select(AIC, BIC, adj.r.squared)
 
-kable(model_summary) |>
-  kable_styling(font_size = 10)
+kable(model_summary)
 ```
 
 The final model has a AIC of 3627.979, a BIC of 3654.691, and an adjusted $R^{2}$ of about 0.047.
@@ -452,9 +454,7 @@ fit_int <- wflow3_int |>
   fit(data = train)
 
 tidy(fit_int) |>
-  kable(digits = 3) |>
-  kable_styling(font_size = 10)
-
+  kable(digits = 3)
 ```
 
 Because the p value for `gender_r:perc_wom_exp` is about 0.703, we fail to reject the null hypothesis and can conclude that there are no significant interactions between the two variables.
@@ -476,16 +476,24 @@ There is no variable with $VIF > 10$ that indicates concerning multicollinearity
 train_pred <- predict(fit, train) |>
   bind_cols(train)
 
-r1<- rmse(train_pred, truth = profit, estimate = .pred)
-r21<- rsq(train_pred, truth = profit, estimate = .pred)
+r1<- rmse(train_pred, truth = profit, estimate = .pred) |>
+  kable()
+r21<- rsq(train_pred, truth = profit, estimate = .pred) |>
+  kable()
 
 test_pred <- predict(fit, test) |>
   bind_cols(test)
 
-r2<- rmse(test_pred, truth = profit, estimate = .pred)
-r22<- rsq(test_pred, truth = profit, estimate = .pred)
-knitr::kable(list(r1, r2))
-knitr::kable(list(r21, r22))
+r2<- rmse(test_pred, truth = profit, estimate = .pred) |>
+  kable()
+r22<- rsq(test_pred, truth = profit, estimate = .pred) |>
+  kable()
+
+r1
+r21
+
+r21
+r22
 ```
 
 The RMSE for the training data predicting log-profit is about 5.112, which means that the RMSE for profit would be about \$`r round(exp(5.112))` million. The RMSE for testing data is about 5.057, meaning that the RMSE for profit on the testing data is about \$`r round(exp(5.057))`million. While there is a difference of about \$9 million, considering that the range of the data is in the hundreds of millions of USD, this is not a jarring sign that the model overfits the data. Therefore, we can reasonably conclude that the model can be generalized to new data. However, looking at the RMSE and $R^{2}$ of the training data, we may not conclude that this model performs well. We can see that there is a very small $R^{2}$ for the model showing that only about 1.85% of the variability in the profit can be explained by variables in the model.
