@@ -321,6 +321,7 @@ spec <- linear_reg() |>
 
 To prepare the variables for our analysis, we used a recipe. First, we dropped all the NA values using `step_naomit()` to ensure that the values we do use are accurate. For example, the data set has observations with NA values in women's participation rate. However, when the sum participation rate for women is calculated, the data set represents this sum with 0. This 0 can skew the regression model when the true participation rate of women may not be 0. Since we are using total participation rate in our model, it is best to drop NA values. Also, considering that the data set has 775 observations after all NA's are dropped, we still have a lot of reliable data to use for modeling. Most of the school's with missing data were school's without a basketball team. However, there are potentially some school's that did have a basketball team and had other NA values that got dropped that we will analyze more in discussion section. Then, we used `step_zv()` to remove all predictors that contain only a single value. We created dummy variables using `step_dummy()` for all nominal predictors which are Classification name and Sector name. Lastly, we used `step_center()` to mean center our quantitative predictors.
 
+\tiny
 
 ```{r recipe}
 rec1 <- recipe(log_profit ~ total_partc + sector_name + gender_r
@@ -406,6 +407,7 @@ map_df(fit_rs3$.extracts, ~ .x[[1]][[1]]) |>
   kable(digits = 3)
 ```
 
+\normalsize
 
 We compute the AIC, BIC, and adjusted $R^{2}$ values of all 3 models. Aiming for a parsimonious model, we chose the third model with the least number of terms and lowest BIC.
 
@@ -421,6 +423,8 @@ tidy(fit) |>
 
 -   Model fit statistics
 
+\tiny
+
 ```{r stat-final}
 model_summary <- glance(fit) |> 
   select(AIC, BIC, adj.r.squared)
@@ -428,9 +432,13 @@ model_summary <- glance(fit) |>
 kable(model_summary)
 ```
 
+\normalsize
+
 The final model has a AIC of 3627.979, a BIC of 3654.691, and an adjusted $R^{2}$ of about 0.047.
 
 To see if there are interaction terms, we used `step_interact()`. Because we took out the sector name variable, we decided to check if there were any interaction effects between gender ratio and percentage of women expenditure with these variables with both variables having a relationship to gender.
+
+\tiny
 
 ```{r check-interact}
 rec3_int <-  recipe(log_profit ~ total_partc + ef_total_count + gender_r + perc_wom_exp, 
@@ -457,11 +465,15 @@ tidy(fit_int) |>
   kable(digits = 3)
 ```
 
+\normalsize
+
 Because the p value for `gender_r:perc_wom_exp` is about 0.703, we fail to reject the null hypothesis and can conclude that there are no significant interactions between the two variables.
 
 #### Results
 
 Our initial model including total participation rate, school sector name, gender ratio, total student count, classification name, and percentage of women expenditure has a AIC of 3443.95 and a BIC of 3545.167. When we reduce the sector name variable, the AIC decreases to 3443.531 and the BIC decreases to 3527.144. In accordance to parsimony, we choose our final model that further reduce the model by taking out the classification name variable since it has the lowest BIC. We decide not to further reduce the terms in the model to have sufficient predictor variables for the response variable.
+
+\tiny
 
 ```{r vif}
 fit <- extract_fit_parsnip(fit)
@@ -470,7 +482,11 @@ vif(fit$fit) |>
   kable(digits = 3)
 ```
 
+\normalsize
+
 There is no variable with $VIF > 10$ that indicates concerning multicollinearity, so no apparent issue with multicollinearity is found.
+
+\tiny
 
 ```{r find-rmse}
 train_pred <- predict(fit, train) |>
@@ -489,12 +505,14 @@ r2<- rmse(test_pred, truth = profit, estimate = .pred) |>
 r22<- rsq(test_pred, truth = profit, estimate = .pred) |>
   kable()
 
+
 r1
 r21
-
-r21
+r2
 r22
 ```
+
+\normalsize
 
 The RMSE for the training data predicting log-profit is about 5.112, which means that the RMSE for profit would be about \$`r round(exp(5.112))` million. The RMSE for testing data is about 5.057, meaning that the RMSE for profit on the testing data is about \$`r round(exp(5.057))`million. While there is a difference of about \$9 million, considering that the range of the data is in the hundreds of millions of USD, this is not a jarring sign that the model overfits the data. Therefore, we can reasonably conclude that the model can be generalized to new data. However, looking at the RMSE and $R^{2}$ of the training data, we may not conclude that this model performs well. We can see that there is a very small $R^{2}$ for the model showing that only about 1.85% of the variability in the profit can be explained by variables in the model.
 
